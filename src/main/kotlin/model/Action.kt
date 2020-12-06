@@ -4,7 +4,9 @@ import util.StreamUtil
 
 class Action {
     lateinit var entityActions: MutableMap<Int, model.EntityAction>
-    constructor() {}
+    constructor() {
+        this.entityActions = mutableMapOf()
+    }
     constructor(entityActions: MutableMap<Int, model.EntityAction>) {
         this.entityActions = entityActions
     }
