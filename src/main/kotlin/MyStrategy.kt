@@ -10,7 +10,7 @@ class MyStrategy {
         controller?.checkConsistency(currentTick, myId, mapSize, maxPathfindNodes, maxTickCount, fogOfWar)
 
         controller?.tick(currentTick, entities, entityProperties, players)
-        controller?.bestAction
+        controller!!.bestAction
     }
 
     fun debugUpdate(playerView: PlayerView, debugInterface: DebugInterface) {
