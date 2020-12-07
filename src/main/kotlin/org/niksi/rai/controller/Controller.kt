@@ -35,11 +35,3 @@ class Controller(
 
 private fun Iterable<MetaAction>.takeBest() = maxByOrNull { 0 } ?: DO_NOTHING
 
-val DO_NOTHING = MetaAction {
-    Action()
-}
-
-class MetaAction(val decoder: () -> Action) {
-    fun DecodeToAction() = decoder()
-
-}
