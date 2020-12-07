@@ -19,7 +19,7 @@ class Controller(
         return object : Iterable<MetaAction> {
             override fun iterator(): Iterator<MetaAction> = object : Iterator<MetaAction> {
                 override fun hasNext(): Boolean {
-                    TODO("not implemented")
+                    return false
                 }
 
                 override fun next(): MetaAction {
@@ -33,13 +33,13 @@ class Controller(
 
 }
 
-private fun Iterable<MetaAction>.takeBest(): MetaAction {
-    TODO("not implemented")
+private fun Iterable<MetaAction>.takeBest() = maxByOrNull { 0 } ?: DO_NOTHING
+
+val DO_NOTHING = MetaAction {
+    Action()
 }
 
-class MetaAction {
-    fun DecodeToAction(): Action {
-        TODO("not implemented")
-    }
+class MetaAction(val decoder: () -> Action) {
+    fun DecodeToAction() = decoder()
 
 }
