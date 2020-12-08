@@ -14,11 +14,11 @@ class Controller(
 
     fun tick(currentTick: Int, entities: Array<Entity>, entityProperties: MutableMap<EntityType, EntityProperties>, players: Array<Player>) {
         val state = FieldState(entities, entityProperties, players, myId)
-        bestAction = thoughtfulActions().takeBest().DecodeToAction(state)
+        bestAction = thoughtfulActions().takeBest().feedbackTo(predictor).DecodeToAction(state)
     }
 
-    private fun thoughtfulActions(): Iterable<MetaAction> = listOf(ATTACK_ENEMY)
+    private fun thoughtfulActions(): Iterable<MetaAction> = listOf(COLLECT_RESOURCES, ATTACK_ENEMY)
 
-    fun Iterable<MetaAction>.takeBest() = maxByOrNull { predictor.predict() } ?: DO_NOTHING
+    fun Iterable<MetaAction>.takeBest() = maxByOrNull { predictor.predict(it) } ?: DO_NOTHING
 }
 
