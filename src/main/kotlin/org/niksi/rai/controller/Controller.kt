@@ -16,7 +16,7 @@ class Controller(
 
     fun tick(currentTick: Int, entities: Array<Entity>, entityProperties: MutableMap<EntityType, EntityProperties>, players: Array<Player>) {
         val state = FieldState(entities, entityProperties, players, myId)
-        bestAction = thoughtfulActions().takeBest(state).feedbackTo(predictor).DecodeToAction(state)
+        bestAction = thoughtfulActions().takeBest(state).log().DecodeToAction(state)
     }
 
     private fun thoughtfulActions(): Iterable<MetaAction> = listOf(
