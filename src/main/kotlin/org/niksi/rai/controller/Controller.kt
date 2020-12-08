@@ -17,7 +17,7 @@ class Controller(
         bestAction = thoughtfulActions().takeBest().DecodeToAction(state)
     }
 
-    private fun thoughtfulActions(): Iterable<MetaAction> = listOf(COLLECT_RESOURCES)
+    private fun thoughtfulActions(): Iterable<MetaAction> = listOf(ATTACK_ENEMY)
 
     fun Iterable<MetaAction>.takeBest() = maxByOrNull { predictor.predict() } ?: DO_NOTHING
 }
