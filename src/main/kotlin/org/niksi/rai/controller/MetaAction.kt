@@ -19,12 +19,24 @@ val BUILD_UNIT_BUILDER = MetaAction {
     it.myBuilderBase.build(it, EntityType.BUILDER_UNIT)
 }
 
+val BUILD_BASE_RANGED = MetaAction {
+    val position = Vec2Int(0,0)
+    it.myBuilders.closest(position)?.build(it, EntityType.MELEE_BASE, position) ?: mutableMapOf()
+}
+
+
 val BUILD_UNIT_MELEE = MetaAction {
     it.myMeleeBase.build(it, EntityType.MELEE_UNIT)
 }
 
+val BUILD_UNIT_RANGED = MetaAction {
+    it.myRangedBase.build(it, EntityType.RANGED_UNIT)
+}
+
+fun List<Entity>.closest(position: Vec2Int) = minByOrNull { distance(it.position, position) }
+
 private fun List<Entity>.attackClosestToYou(targets: List<Entity>) = act {
-    val closest = targets.minByOrNull { target -> distance(it.position, target.position) }
+    val closest = targets.closest(it.position)
     when (closest) {
         null -> EntityAction(null, null, null, null);
         else -> EntityAction(
@@ -41,8 +53,7 @@ fun manhDistance(x: Int, y: Int, x1: Int, y1: Int) = abs(x - x1) + abs(y - y1)
 
 fun List<Entity>.act(action: (Entity) -> EntityAction) = associateBy({ it.id }, action).toMutableMap()
 
-
-private fun Entity.build(fieldState: FieldState, type: EntityType): MutableMap<Int, EntityAction> {
+private fun Entity.build(fieldState: FieldState, type: EntityType, position: Vec2Int = this.position): MutableMap<Int, EntityAction> {
     val properties = fieldState.properties(this)
     val size = properties.size
     var gatePosition = Vec2Int(position.x + size, position.y + size - 1)

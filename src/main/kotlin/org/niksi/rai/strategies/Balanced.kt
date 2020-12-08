@@ -14,6 +14,18 @@ val Balanced = StrategicDsl {
         (it.myBuilders.count() > 4).isGood()
     }
 
+    BUILD_UNIT_RANGED.rule("Builders are Limited") {
+        (it.myBuilders.count() < 5).isBad()
+        (it.myMelee.count() > 0).isGood()
+        (it.myBuilders.count() > 4).isGood()
+    }
+
+    BUILD_BASE_RANGED.rule("Builders are Limited") {
+        (it.myBuilders.count() < 5).isBad()
+        (it.myMelee.count() > 0).isGood()
+        (it.myBuilders.count() > 4).isGood()
+    }
+
     COLLECT_RESOURCES.rule("Builders are Limited") {
         true.isGood()
     }

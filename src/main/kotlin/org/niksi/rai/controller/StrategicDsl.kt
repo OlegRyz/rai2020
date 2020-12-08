@@ -22,7 +22,6 @@ class StrategicContext() {
         }
     }
 
-
     val rulesMap = mutableMapOf<MetaAction, (FieldState) -> Unit>()
     fun MetaAction.rule(name: String, function: (FieldState) -> Unit) {
         rulesMap[this] = function

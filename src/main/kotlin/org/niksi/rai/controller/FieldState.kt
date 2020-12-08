@@ -38,4 +38,3 @@ fun Array<Entity>.filterType(entityType: EntityType) = filter { it.entityType ==
 fun Array<Entity>.filterNotType(entityType: EntityType) = filterNot { it.entityType == entityType }
 
 fun List<Entity>.filterType(entityType: EntityType) = filter { it.entityType == entityType }
-fun List<Entity>.filterNotType(entityType: EntityType) = filterNot { it.entityType == entityType }
