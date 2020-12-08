@@ -13,7 +13,7 @@ class Controller(
 
     fun tick(currentTick: Int, entities: Array<Entity>, entityProperties: MutableMap<EntityType, EntityProperties>, players: Array<Player>) {
         val state = FieldState(entities, entityProperties, players, myId)
-        bestAction = thoughtfulActions().takeBest().DecodeToAction()
+        bestAction = thoughtfulActions().takeBest().DecodeToAction(state)
     }
 
     private fun thoughtfulActions(): Iterable<MetaAction> {
@@ -34,5 +34,5 @@ class Controller(
 
 }
 
-private fun Iterable<MetaAction>.takeBest() = maxByOrNull { 0 } ?: DO_NOTHING
+private fun Iterable<MetaAction>.takeBest() = maxByOrNull { 0 } ?: COLLECT_RESOURCES
 
