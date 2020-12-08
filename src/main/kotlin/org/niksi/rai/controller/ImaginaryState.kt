@@ -1,5 +1,5 @@
 package org.niksi.rai.controller
 
-class ImaginaryState(fieldState: FieldState, metaAction: MetaAction) {
+class ImaginaryState(val fieldState: FieldState, val metaAction: MetaAction) {
 
 }

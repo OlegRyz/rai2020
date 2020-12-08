@@ -20,6 +20,8 @@ class FieldState(entities: Array<Entity>, val entityProperties: MutableMap<Entit
     val myInfantry = listOf(myMelee, myRanged).flatten()
 
     val myBuilderBase = my.first{ it.entityType == BUILDER_BASE}
+    val myMeleeBase = my.first{ it.entityType == MELEE_BASE}
+    val myRangedBase = my.first{ it.entityType == RANGED_BASE}
 
     val enemies = nonResources.filterNotPlayerId(myId)
     val enemyBuilders = enemies.filterType(BUILDER_UNIT)
