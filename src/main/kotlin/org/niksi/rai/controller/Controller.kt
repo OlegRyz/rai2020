@@ -16,23 +16,9 @@ class Controller(
         bestAction = thoughtfulActions().takeBest().DecodeToAction(state)
     }
 
-    private fun thoughtfulActions(): Iterable<MetaAction> {
-        return object : Iterable<MetaAction> {
-            override fun iterator(): Iterator<MetaAction> = object : Iterator<MetaAction> {
-                override fun hasNext(): Boolean {
-                    return false
-                }
-
-                override fun next(): MetaAction {
-                    TODO("not implemented")
-                }
-
-            }
-
-        }
-    }
+    private fun thoughtfulActions(): Iterable<MetaAction> = listOf(COLLECT_RESOURCES)
 
 }
 
-private fun Iterable<MetaAction>.takeBest() = maxByOrNull { 0 } ?: COLLECT_RESOURCES
+private fun Iterable<MetaAction>.takeBest() = maxByOrNull { 0 } ?: DO_NOTHING
 
