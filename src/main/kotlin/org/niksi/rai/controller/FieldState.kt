@@ -6,7 +6,9 @@ import model.EntityType
 import model.EntityType.*
 import model.Player
 
-class FieldState(entities: Array<Entity>, entityProperties: MutableMap<EntityType, EntityProperties>, players: Array<Player>, myId: Int) {
+class FieldState(entities: Array<Entity>, val entityProperties: MutableMap<EntityType, EntityProperties>, players: Array<Player>, myId: Int) {
+    fun properties(entity: Entity) = entityProperties[entity.entityType]!!
+
     val resources = entities.filterType(RESOURCE)
     val nonResources = entities.filterNotType(RESOURCE)
 
@@ -15,6 +17,8 @@ class FieldState(entities: Array<Entity>, entityProperties: MutableMap<EntityTyp
     val myMelee = my.filterType(MELEE_UNIT)
     val myRanged = my.filterType(RANGED_UNIT)
     val myInfantry = listOf(myMelee, myRanged).flatten()
+
+    val myBuilderBase = my.first{ it.entityType == BUILDER_BASE}
 
     val enemies = nonResources.filterNotPlayerId(myId)
     val enemyBuilders = enemies.filterType(BUILDER_UNIT)
