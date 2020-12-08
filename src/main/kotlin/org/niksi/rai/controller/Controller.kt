@@ -12,6 +12,7 @@ class Controller(
     var bestAction = Action()
 
     fun tick(currentTick: Int, entities: Array<Entity>, entityProperties: MutableMap<EntityType, EntityProperties>, players: Array<Player>) {
+        val state = FieldState(entities, entityProperties, players, myId)
         bestAction = thoughtfulActions().takeBest().DecodeToAction()
     }
 
