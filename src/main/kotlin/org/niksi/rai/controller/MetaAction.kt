@@ -4,7 +4,7 @@ import model.*
 import kotlin.math.abs
 
 val DO_NOTHING = MetaAction {
-    Action()
+    mutableMapOf()
 }
 
 val COLLECT_RESOURCES = MetaAction {
@@ -31,7 +31,7 @@ fun distance(position: Vec2Int, target: Vec2Int) = manhDistance(position.x, posi
 
 fun manhDistance(x: Int, y: Int, x1: Int, y1: Int) = abs(x - x1) + abs(y - y1)
 
-fun List<Entity>.act(action: (Entity) -> EntityAction) = Action(associateBy({ it.id }, action).toMutableMap())
+fun List<Entity>.act(action: (Entity) -> EntityAction) = associateBy({ it.id }, action).toMutableMap()
 
 private fun List<Entity>.collect() = act {
     EntityAction(
@@ -41,6 +41,6 @@ private fun List<Entity>.collect() = act {
             null)
 }
 
-class MetaAction(val decoder: (FieldState) -> Action) {
-    fun DecodeToAction(state: FieldState) = decoder(state)
+class MetaAction(val decoder: (FieldState) -> MutableMap<Int, EntityAction>) {
+    fun DecodeToAction(state: FieldState) = Action(decoder(state))
 }
