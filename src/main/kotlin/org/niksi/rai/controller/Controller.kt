@@ -10,6 +10,7 @@ class Controller(
         val maxTickCount: Int,
         val fogOfWar: Boolean) {
     var bestAction = Action()
+    val predictor = Predictor()
 
     fun tick(currentTick: Int, entities: Array<Entity>, entityProperties: MutableMap<EntityType, EntityProperties>, players: Array<Player>) {
         val state = FieldState(entities, entityProperties, players, myId)
@@ -18,7 +19,6 @@ class Controller(
 
     private fun thoughtfulActions(): Iterable<MetaAction> = listOf(COLLECT_RESOURCES)
 
+    fun Iterable<MetaAction>.takeBest() = maxByOrNull { predictor.predict() } ?: DO_NOTHING
 }
-
-private fun Iterable<MetaAction>.takeBest() = maxByOrNull { 0 } ?: DO_NOTHING
 
