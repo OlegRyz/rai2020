@@ -10,15 +10,16 @@ class Controller(
         val maxTickCount: Int,
         val fogOfWar: Boolean) {
     var bestAction = Action()
-    val predictor = Predictor()
+    val dsl = StrategicDsl()
+    val predictor = Predictor(dsl)
 
     fun tick(currentTick: Int, entities: Array<Entity>, entityProperties: MutableMap<EntityType, EntityProperties>, players: Array<Player>) {
         val state = FieldState(entities, entityProperties, players, myId)
-        bestAction = thoughtfulActions().takeBest().feedbackTo(predictor).DecodeToAction(state)
+        bestAction = thoughtfulActions().takeBest(state).feedbackTo(predictor).DecodeToAction(state)
     }
 
-    private fun thoughtfulActions(): Iterable<MetaAction> = listOf(COLLECT_RESOURCES, ATTACK_ENEMY)
+    private fun thoughtfulActions(): Iterable<MetaAction> = listOf(COLLECT_RESOURCES, ATTACK_ENEMY, BUILD_UNIT_BUILDER)
 
-    fun Iterable<MetaAction>.takeBest() = maxByOrNull { predictor.predict(it) } ?: DO_NOTHING
+    fun Iterable<MetaAction>.takeBest(state: FieldState) = maxByOrNull { predictor.predict(it, state) } ?: DO_NOTHING
 }
 

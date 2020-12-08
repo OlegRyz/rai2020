@@ -8,6 +8,7 @@ import model.Player
 
 class FieldState(entities: Array<Entity>, val entityProperties: MutableMap<EntityType, EntityProperties>, players: Array<Player>, myId: Int) {
     fun properties(entity: Entity) = entityProperties[entity.entityType]!!
+    fun simulate(metaAction: MetaAction) = ImaginaryState(this, metaAction)
 
     val resources = entities.filterType(RESOURCE)
     val nonResources = entities.filterNotType(RESOURCE)
