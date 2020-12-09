@@ -3,6 +3,15 @@ package org.niksi.rai.controller
 import model.*
 import model.EntityType.*
 
+private val Entity.isBuilding: Boolean
+    get() = entityType == BUILDER_BASE ||
+            entityType == MELEE_BASE ||
+            entityType == RANGED_BASE ||
+            entityType == HOUSE ||
+            entityType == TURRET ||
+            entityType == WALL
+
+
 class FieldState(
     entities: Array<Entity>,
     val entityProperties: MutableMap<EntityType, EntityProperties>,
@@ -28,9 +37,11 @@ class FieldState(
     val myRanged = my.filterType(RANGED_UNIT)
     val myInfantry = listOf(myMelee, myRanged).flatten()
 
-    val myBuilderBase = my.firstOrNull { it.entityType == BUILDER_BASE }
-    val myMeleeBase = my.firstOrNull { it.entityType == MELEE_BASE }
-    val myRangedBase = my.firstOrNull { it.entityType == RANGED_BASE }
+    val myBuildings = my.filter { it.isBuilding }
+    val myBuilderBase = myBuildings.firstOrNull { it.entityType == BUILDER_BASE }
+    val myMeleeBase = myBuildings.firstOrNull { it.entityType == MELEE_BASE }
+    val myRangedBase = myBuildings.firstOrNull { it.entityType == RANGED_BASE }
+    val myUnhealthyBuildings = myBuildings.filter { it.health < entityProperties[it.entityType]!!.maxHealth }
 
     val myPopulation = my.fold(0) { acc, entity -> acc + properties(entity).populationUse }
     val myPopulationLimit = my.fold(0) { acc, entity -> acc + (if (entity.active) properties(entity).populationProvide else 0)}
@@ -42,6 +53,7 @@ class FieldState(
     val enemyInfantry = listOf(enemyMelee, enemyRanged).flatten()
     val enemyUnits = listOf(enemyMelee, enemyRanged, enemyBuilders).flatten()
     fun List<Entity>.free() = filterNot { ordersCache.any {orderItem -> it.id == orderItem.id } }
+    fun myEntityBy(id: Int?) = if (id == null) null else my.firstOrNull{ it.id == id }
 }
 
 class OrdersCache: MutableList<OrderItem> by mutableListOf()

@@ -42,21 +42,53 @@ val BUILD_UNIT_RANGED = MetaAction("BUILD_UNIT_RANGED") {
 }
 
 val BUILD_HOUSE = MetaAction("BUILD_HOUSE") {
-    it.myBuilders.choose(it)?.build(it, EntityType.HOUSE)
+    it.myBuilders.choose(it, this)?.build(it, EntityType.HOUSE)
 }
 
-fun List<Entity>.choose(state: FieldState) = state.myHouseBuilder
-    ?:closest(state.myBuilderBase?.position ?: state.my.middlePoint())
+val REPAIR_BUILDINGS = MetaAction("REPAIR_BUILDINGS") {
+    it.myBuilders.choose(it, this)?.repair(it, it.myUnhealthyBuildings)
+}
+
+private fun Entity.repair(it: FieldState, entities: List<Entity>) = mutableMapOf(
+    id to when (val closest = entities.closest(position)) {
+        null -> EntityAction(
+            null,
+            null,
+            null,
+            null
+        )
+        else -> EntityAction(
+            MoveAction(closest.position, true, true),
+            null,
+            null,
+            RepairAction(closest.id)
+
+        )
+    }
+)
+
+
+fun List<Entity>.choose(state: FieldState, metaAction: MetaAction): Entity? {
+    val id = state.ordersCache.find { it.order == metaAction }?.id
+    val ordered = state.myEntityBy(id)
+    return ordered ?: closest(state.myBuilderBase?.position ?: state.myBuilders.middlePoint())
+}
 
 fun Entity.build(
     fieldState: FieldState,
     type: EntityType,
     position: Vec2Int = this.position
+) = id.build(fieldState, type, position)
+
+fun Int.build(
+    fieldState: FieldState,
+    type: EntityType,
+    position: Vec2Int
 ): MutableMap<Int, EntityAction> {
     val size = fieldState.properties(type).size
     return mutableMapOf(
-        id to EntityAction(
-            MoveAction(position.randomShift(3*size, 3*size).limitToMap(), true, true),
+        this to EntityAction(
+            MoveAction(position.randomShift(3 * size, 3 * size).limitToMap(), true, true),
             BuildAction(type, position),
             null,
             null
@@ -71,7 +103,8 @@ private fun Vec2Int.randomShift(dx: Int, dy: Int) = Vec2Int(
 
 private fun Vec2Int.limitToMap() = Vec2Int(
     x.coerceIn(0..globalSettings.mapSize),
-    y.coerceIn(0..globalSettings.mapSize))
+    y.coerceIn(0..globalSettings.mapSize)
+)
 
 fun List<Entity>.closest(position: Vec2Int) = minByOrNull { distance(it.position, position) }
 

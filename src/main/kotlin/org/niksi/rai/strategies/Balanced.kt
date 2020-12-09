@@ -43,8 +43,14 @@ val Balanced = StrategicDsl {
     }
 
     BUILD_HOUSE.rule("Build a house if food is low") {
-        (it.myPopulationLimit - it.myPopulation < 3).isAlwaysNeeded()
+        (it.myPopulationLimit - it.myPopulation < 3
+                && !it.myUnhealthyBuildings.any()).isAlwaysNeeded()
         (it.myPopulationLimit - it.myPopulation > 5).isNotAcceptable()
+    }
+
+    REPAIR_BUILDINGS.rule("") {
+        (it.myUnhealthyBuildings.any()).isAlwaysNeeded()
+        (!it.myUnhealthyBuildings.any()).isNotAcceptable()
     }
 }
 
