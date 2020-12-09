@@ -20,8 +20,13 @@ val ATTACK_ENEMY = MetaAction("ATTACK_ENEMY") {
 }
 
 val GEATHER_ARMY = MetaAction("GEATHER_ARMY") {
-    it.myInfantry.move(it.myInfantry.middlePoint())
+    it.myInfantry.move((it.myBuildings.middlePoint() to globalSettings.center).transit(0.2))
 }
+
+fun Pair<Vec2Int, Vec2Int>.transit(share: Double) = Vec2Int(
+    ((second.x - first.x) * share + first.x).toInt(),
+    ((second.y - first.y) * share + first.y).toInt(),
+)
 
 val BUILD_UNIT_BUILDER = MetaAction("BUILD_UNIT_BUILDER") {
     it.myBuilderBase?.produce(it, EntityType.BUILDER_UNIT)

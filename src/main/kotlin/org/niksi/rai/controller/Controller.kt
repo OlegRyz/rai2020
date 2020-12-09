@@ -4,7 +4,9 @@ import model.*
 import org.niksi.rai.strategies.Balanced
 import kotlin.collections.*
 
-data class GlobalSettings(val mapSize: Int)
+data class GlobalSettings(val mapSize: Int) {
+    val center = Vec2Int(mapSize / 2, mapSize / 2)
+}
 
 lateinit var globalSettings: GlobalSettings
 
