@@ -14,8 +14,10 @@ class Controller(
     val dsl = Balanced
     val predictor = Predictor(dsl)
 
+    val ordersCache = OrdersCache()
+
     fun tick(currentTick: Int, entities: Array<Entity>, entityProperties: MutableMap<EntityType, EntityProperties>, players: Array<Player>) {
-        val state = FieldState(entities, entityProperties, players, myId)
+        val state = FieldState(entities, entityProperties, players, myId, ordersCache)
         bestAction = thoughtfulActions().takeBest(state).log().DecodeToAction(state)
     }
 

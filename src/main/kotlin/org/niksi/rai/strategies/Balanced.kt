@@ -28,7 +28,7 @@ val Balanced = StrategicDsl {
     }
 
     COLLECT_RESOURCES.rule("Builders are Limited") {
-        (it.myBuilders.any()).isAlwaysNeeded()
+        (it.myFreeBuilders.any()).isAlwaysNeeded()
     }
 
     ATTACK_ENEMY.rule("") {

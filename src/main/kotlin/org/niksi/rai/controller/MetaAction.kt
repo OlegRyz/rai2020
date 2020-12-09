@@ -8,7 +8,10 @@ val DO_NOTHING = MetaAction {
 }
 
 val COLLECT_RESOURCES = MetaAction {
-    it.myBuilders.collect()
+    it.myBuilders.run {
+        it.recordOrder(this)
+        collect()
+    }
 }
 
 val ATTACK_ENEMY = MetaAction {

@@ -10,16 +10,21 @@ class FieldState(
     entities: Array<Entity>,
     val entityProperties: MutableMap<EntityType, EntityProperties>,
     players: Array<Player>,
-    myId: Int
+    myId: Int,
+    val ordersCache: OrdersCache
 ) {
     fun properties(entity: Entity) = entityProperties[entity.entityType]!!
     fun simulate(metaAction: MetaAction) = ImaginaryState(this, metaAction)
+    fun recordOrder(entities: List<Entity>) {
+        ordersCache.addAll(entities.map { it.id })
+    }
 
     val resources = entities.filterType(RESOURCE)
     val nonResources = entities.filterNotType(RESOURCE)
 
     val my = nonResources.filterPlayerId(myId)
     val myBuilders = my.filterType(BUILDER_UNIT)
+    val myFreeBuilders = myBuilders.free()
     val myMelee = my.filterType(MELEE_UNIT)
     val myRanged = my.filterType(RANGED_UNIT)
     val myInfantry = listOf(myMelee, myRanged).flatten()
@@ -34,7 +39,10 @@ class FieldState(
     val enemyRanged = enemies.filterType(RANGED_UNIT)
     val enemyInfantry = listOf(enemyMelee, enemyRanged).flatten()
     val enemyUnits = listOf(enemyMelee, enemyRanged, enemyBuilders).flatten()
+    fun List<Entity>.free() = filterNot { ordersCache.contains(it.id) }
 }
+
+class OrdersCache: MutableList<Int> by mutableListOf()
 
 private fun List<Entity>.filterPlayerId(playerId: Int) = filter { it.playerId == playerId }
 private fun List<Entity>.filterNotPlayerId(playerId: Int) = filterNot { it.playerId == playerId }
