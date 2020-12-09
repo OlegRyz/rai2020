@@ -41,6 +41,11 @@ val Balanced = StrategicDsl {
         (it.myInfantry.count() < 10).isGood()
         (it.myInfantry.count() > 9).isBad()
     }
+
+    BUILD_HOUSE.rule("Build a house if food is low") {
+        (it.myPopulationLimit - it.myPopulation < 3).isGood()
+        (it.myPopulationLimit - it.myPopulation > 5).isNotAcceptable()
+    }
 }
 
 

@@ -23,21 +23,42 @@ val GEATHER_ARMY = MetaAction("GEATHER_ARMY") {
 }
 
 val BUILD_UNIT_BUILDER = MetaAction("BUILD_UNIT_BUILDER") {
-    it.myBuilderBase?.build(it, EntityType.BUILDER_UNIT)
+    it.myBuilderBase?.produce(it, EntityType.BUILDER_UNIT)
 }
 
 val BUILD_BASE_RANGED = MetaAction("BUILD_BASE_RANGED") {
     val position = Vec2Int(0, 0)
-    it.myBuilders.closest(position)?.build(it, EntityType.MELEE_BASE, position) ?: mutableMapOf()
+    it.myBuilders.closest(position)?.produce(it, EntityType.MELEE_BASE, position) ?: mutableMapOf()
 }
 
 
 val BUILD_UNIT_MELEE = MetaAction("BUILD_UNIT_MELEE") {
-    it.myMeleeBase?.build(it, EntityType.MELEE_UNIT)
+    it.myMeleeBase?.produce(it, EntityType.MELEE_UNIT)
 }
 
 val BUILD_UNIT_RANGED = MetaAction("BUILD_UNIT_RANGED") {
-    it.myRangedBase?.build(it, EntityType.RANGED_UNIT)
+    it.myRangedBase?.produce(it, EntityType.RANGED_UNIT)
+}
+
+val BUILD_HOUSE = MetaAction("BUILD_HOUSE") {
+    it.myBuilders.firstOrNull()?.build(it, EntityType.HOUSE)
+}
+
+fun Entity.build(
+    fieldState: FieldState,
+    type: EntityType,
+    position: Vec2Int = this.position
+): MutableMap<Int, EntityAction> {
+    val properties = fieldState.properties(this)
+    val size = properties.size
+    return mutableMapOf(
+        id to EntityAction(
+            MoveAction(position, true, true),
+            BuildAction(type, position),
+            null,
+            null
+        )
+    )
 }
 
 fun List<Entity>.closest(position: Vec2Int) = minByOrNull { distance(it.position, position) }
@@ -79,7 +100,7 @@ fun manhDistance(x: Int, y: Int, x1: Int, y1: Int) = abs(x - x1) + abs(y - y1)
 
 fun List<Entity>.act(action: (Entity) -> EntityAction) = associateBy({ it.id }, action).toMutableMap()
 
-private fun Entity.build(
+private fun Entity.produce(
     fieldState: FieldState,
     type: EntityType,
     position: Vec2Int = this.position
@@ -107,7 +128,7 @@ private fun List<Entity>.collect() = act {
 }
 
 class MetaAction(val name: String = "", val decoder: (FieldState) -> MutableMap<Int, EntityAction>?) {
-    fun DecodeToAction(state: FieldState) = Action(decoder(state)?: mutableMapOf())
+    fun DecodeToAction(state: FieldState) = Action(decoder(state) ?: mutableMapOf())
     fun log(): MetaAction {
         println(this)
         return this

@@ -14,6 +14,7 @@ class FieldState(
     val ordersCache: OrdersCache
 ) {
     fun properties(entity: Entity) = entityProperties[entity.entityType]!!
+    fun properties(entityType: EntityType) = entityProperties[entityType]!!
     fun simulate(metaAction: MetaAction) = ImaginaryState(this, metaAction)
     fun recordOrder(entities: List<Entity>) {
         ordersCache.addAll(entities.map { it.id })
@@ -32,6 +33,9 @@ class FieldState(
     val myBuilderBase = my.firstOrNull { it.entityType == BUILDER_BASE }
     val myMeleeBase = my.firstOrNull { it.entityType == MELEE_BASE }
     val myRangedBase = my.firstOrNull { it.entityType == RANGED_BASE }
+
+    val myPopulation = my.fold(0) { acc, entity -> acc + properties(entity).populationUse }
+    val myPopulationLimit = my.fold(0) { acc, entity -> acc + properties(entity).populationProvide }
 
     val enemies = nonResources.filterNotPlayerId(myId)
     val enemyBuilders = enemies.filterType(BUILDER_UNIT)
