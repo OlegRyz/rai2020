@@ -20,7 +20,7 @@ class Controller(
     }
 
     private fun thoughtfulActions(): Iterable<MetaAction> = listOf(
-        DO_NOTHING, COLLECT_RESOURCES, ATTACK_ENEMY, BUILD_UNIT_BUILDER, BUILD_UNIT_MELEE, BUILD_UNIT_RANGED)
+        DO_NOTHING, COLLECT_RESOURCES, ATTACK_ENEMY, BUILD_UNIT_BUILDER, BUILD_UNIT_MELEE, BUILD_UNIT_RANGED, GEATHER_ARMY)
 
     fun Iterable<MetaAction>.takeBest(state: FieldState) = maxByOrNull { predictor.predict(it, state) } ?: DO_NOTHING
 }

@@ -1,5 +1,6 @@
 package org.niksi.rai.strategies
 
+import model.Entity
 import org.niksi.rai.controller.*
 
 val Balanced = StrategicDsl {
@@ -27,13 +28,20 @@ val Balanced = StrategicDsl {
     }
 
     COLLECT_RESOURCES.rule("Builders are Limited") {
-        true.isGood()
+        (it.myBuilders.any()).isAlwaysNeeded()
     }
 
     ATTACK_ENEMY.rule("") {
-        (it.myInfantry.count() > it.enemyInfantry.count()).isGood()
-        (it.myInfantry.count() < it.enemyInfantry.count()).isBad()
+        (it.myInfantry.count() > it.enemyInfantry.count() + 5).isGood()
+        (it.myInfantry.count() < it.enemyInfantry.count()).isNotAcceptable()
+    }
+
+    GEATHER_ARMY.rule("") {
+        (it.myInfantry.count() < 10).isGood()
+        (it.myInfantry.count() > 9).isBad()
     }
 }
+
+
 
 

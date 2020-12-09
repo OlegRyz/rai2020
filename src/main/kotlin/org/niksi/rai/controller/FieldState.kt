@@ -6,7 +6,12 @@ import model.EntityType
 import model.EntityType.*
 import model.Player
 
-class FieldState(entities: Array<Entity>, val entityProperties: MutableMap<EntityType, EntityProperties>, players: Array<Player>, myId: Int) {
+class FieldState(
+    entities: Array<Entity>,
+    val entityProperties: MutableMap<EntityType, EntityProperties>,
+    players: Array<Player>,
+    myId: Int
+) {
     fun properties(entity: Entity) = entityProperties[entity.entityType]!!
     fun simulate(metaAction: MetaAction) = ImaginaryState(this, metaAction)
 
@@ -19,9 +24,9 @@ class FieldState(entities: Array<Entity>, val entityProperties: MutableMap<Entit
     val myRanged = my.filterType(RANGED_UNIT)
     val myInfantry = listOf(myMelee, myRanged).flatten()
 
-    val myBuilderBase = my.first{ it.entityType == BUILDER_BASE}
-    val myMeleeBase = my.first{ it.entityType == MELEE_BASE}
-    val myRangedBase = my.first{ it.entityType == RANGED_BASE}
+    val myBuilderBase = my.firstOrNull { it.entityType == BUILDER_BASE }
+    val myMeleeBase = my.firstOrNull { it.entityType == MELEE_BASE }
+    val myRangedBase = my.firstOrNull { it.entityType == RANGED_BASE }
 
     val enemies = nonResources.filterNotPlayerId(myId)
     val enemyBuilders = enemies.filterType(BUILDER_UNIT)
@@ -31,8 +36,8 @@ class FieldState(entities: Array<Entity>, val entityProperties: MutableMap<Entit
     val enemyUnits = listOf(enemyMelee, enemyRanged, enemyBuilders).flatten()
 }
 
-private fun List<Entity>.filterPlayerId(playerId: Int) = filter { it.playerId == playerId}
-private fun List<Entity>.filterNotPlayerId(playerId: Int) = filterNot { it.playerId == playerId}
+private fun List<Entity>.filterPlayerId(playerId: Int) = filter { it.playerId == playerId }
+private fun List<Entity>.filterNotPlayerId(playerId: Int) = filterNot { it.playerId == playerId }
 
 fun Array<Entity>.filterType(entityType: EntityType) = filter { it.entityType == entityType }
 fun Array<Entity>.filterNotType(entityType: EntityType) = filterNot { it.entityType == entityType }

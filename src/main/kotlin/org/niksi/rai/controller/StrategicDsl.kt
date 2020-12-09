@@ -22,6 +22,19 @@ class StrategicContext() {
         }
     }
 
+    fun Boolean.isAlwaysNeeded() {
+        if (this) {
+            reward = 1.0
+        }
+    }
+
+
+    fun Boolean.isNotAcceptable() {
+        if (this) {
+            reward = -1.0
+        }
+    }
+
     val rulesMap = mutableMapOf<MetaAction, (FieldState) -> Unit>()
     fun MetaAction.rule(name: String, function: (FieldState) -> Unit) {
         rulesMap[this] = function
