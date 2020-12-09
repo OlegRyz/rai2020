@@ -15,7 +15,7 @@ val COLLECT_RESOURCES = MetaAction("COLLECT_RESOURCES") {
 }
 
 val ATTACK_ENEMY = MetaAction("ATTACK_ENEMY") {
-    it.myInfantry.attackClosestToYou(it.enemyUnits)
+    it.myInfantry.attackClosestToYou(it.enemies)
 }
 
 val GEATHER_ARMY = MetaAction("GEATHER_ARMY") {
