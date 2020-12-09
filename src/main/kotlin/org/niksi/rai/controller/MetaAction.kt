@@ -11,7 +11,7 @@ val DO_NOTHING = MetaAction("DO_NOTHING") {
 val COLLECT_RESOURCES = MetaAction("COLLECT_RESOURCES") {
     it.myBuilders.run {
         it.recordOrder(this, this@MetaAction)
-        collect()
+        collect(it)
     }
 }
 
@@ -163,14 +163,25 @@ private fun Entity.produce(
     )
 }
 
-private fun List<Entity>.collect() = act {
-    EntityAction(
-        null,
-        null,
-        AttackAction(null, AutoAttack(10, arrayOf(EntityType.RESOURCE))),
-        null
-    )
+private fun List<Entity>.collect(fieldState: FieldState) = act {
+    val target = fieldState.resources.randomInRadius(100, it.position) ?:
+        fieldState.resources.randomInRadius(150, it.position) ?:
+        fieldState.resources.randomInRadius(300, it.position)
+    when (val closest = target?.position) {
+        null -> EntityAction(null, null, null, null)
+        else -> EntityAction(
+            MoveAction(closest, true, true),
+            null,
+            AttackAction(null, AutoAttack(10, arrayOf(EntityType.RESOURCE))),
+            null
+        )
+    }
+
 }
+
+fun List<Entity>.allInRadius(radius:Int, center: Vec2Int) = filter { distance(it.position, center) < radius }
+
+fun List<Entity>.randomInRadius(radius:Int, center: Vec2Int) = allInRadius(radius, center).randomOrNull()
 
 class MetaAction(val name: String = "", val decoder: MetaAction.(FieldState) -> MutableMap<Int, EntityAction>?) {
     fun DecodeToAction(state: FieldState) = Action(decoder(state) ?: mutableMapOf())
