@@ -3,40 +3,40 @@ package org.niksi.rai.controller
 import model.*
 import kotlin.math.abs
 
-val DO_NOTHING = MetaAction {
+val DO_NOTHING = MetaAction("DO_NOTHING") {
     mutableMapOf()
 }
 
-val COLLECT_RESOURCES = MetaAction {
+val COLLECT_RESOURCES = MetaAction("COLLECT_RESOURCES") {
     it.myBuilders.run {
         it.recordOrder(this)
         collect()
     }
 }
 
-val ATTACK_ENEMY = MetaAction {
+val ATTACK_ENEMY = MetaAction("ATTACK_ENEMY") {
     it.myInfantry.attackClosestToYou(it.enemyUnits)
 }
 
-val GEATHER_ARMY = MetaAction {
+val GEATHER_ARMY = MetaAction("GEATHER_ARMY") {
     it.myInfantry.move(it.myInfantry.middlePoint())
 }
 
-val BUILD_UNIT_BUILDER = MetaAction {
+val BUILD_UNIT_BUILDER = MetaAction("BUILD_UNIT_BUILDER") {
     it.myBuilderBase?.build(it, EntityType.BUILDER_UNIT)
 }
 
-val BUILD_BASE_RANGED = MetaAction {
+val BUILD_BASE_RANGED = MetaAction("BUILD_BASE_RANGED") {
     val position = Vec2Int(0, 0)
     it.myBuilders.closest(position)?.build(it, EntityType.MELEE_BASE, position) ?: mutableMapOf()
 }
 
 
-val BUILD_UNIT_MELEE = MetaAction {
+val BUILD_UNIT_MELEE = MetaAction("BUILD_UNIT_MELEE") {
     it.myMeleeBase?.build(it, EntityType.MELEE_UNIT)
 }
 
-val BUILD_UNIT_RANGED = MetaAction {
+val BUILD_UNIT_RANGED = MetaAction("BUILD_UNIT_RANGED") {
     it.myRangedBase?.build(it, EntityType.RANGED_UNIT)
 }
 
@@ -106,10 +106,12 @@ private fun List<Entity>.collect() = act {
     )
 }
 
-class MetaAction(val decoder: (FieldState) -> MutableMap<Int, EntityAction>?) {
+class MetaAction(val name: String = "", val decoder: (FieldState) -> MutableMap<Int, EntityAction>?) {
     fun DecodeToAction(state: FieldState) = Action(decoder(state)?: mutableMapOf())
     fun log(): MetaAction {
         println(this)
         return this
     }
+
+    override fun toString() = name
 }
