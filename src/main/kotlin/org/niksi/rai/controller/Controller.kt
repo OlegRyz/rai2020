@@ -4,6 +4,10 @@ import model.*
 import org.niksi.rai.strategies.Balanced
 import kotlin.collections.*
 
+data class GlobalSettings(val mapSize: Int)
+
+lateinit var globalSettings: GlobalSettings
+
 class Controller(
         val myId: Int,
         val mapSize: Int,
@@ -13,8 +17,11 @@ class Controller(
     var bestAction = Action()
     val dsl = Balanced
     val predictor = Predictor(dsl)
-
     val ordersCache = OrdersCache()
+
+    init {
+        globalSettings = GlobalSettings(mapSize)
+    }
 
     fun tick(currentTick: Int, entities: Array<Entity>, entityProperties: MutableMap<EntityType, EntityProperties>, players: Array<Player>) {
         val state = FieldState(entities, entityProperties, players, myId, ordersCache)

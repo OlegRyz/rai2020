@@ -2,6 +2,7 @@ package org.niksi.rai.controller
 
 import model.*
 import kotlin.math.abs
+import kotlin.random.Random
 
 val DO_NOTHING = MetaAction("DO_NOTHING") {
     mutableMapOf()
@@ -9,7 +10,7 @@ val DO_NOTHING = MetaAction("DO_NOTHING") {
 
 val COLLECT_RESOURCES = MetaAction("COLLECT_RESOURCES") {
     it.myBuilders.run {
-        it.recordOrder(this)
+        it.recordOrder(this, this@MetaAction)
         collect()
     }
 }
@@ -41,25 +42,36 @@ val BUILD_UNIT_RANGED = MetaAction("BUILD_UNIT_RANGED") {
 }
 
 val BUILD_HOUSE = MetaAction("BUILD_HOUSE") {
-    it.myBuilders.firstOrNull()?.build(it, EntityType.HOUSE)
+    it.myBuilders.choose(it)?.build(it, EntityType.HOUSE)
 }
+
+fun List<Entity>.choose(state: FieldState) = state.myHouseBuilder
+    ?:closest(state.myBuilderBase?.position ?: state.my.middlePoint())
 
 fun Entity.build(
     fieldState: FieldState,
     type: EntityType,
     position: Vec2Int = this.position
 ): MutableMap<Int, EntityAction> {
-    val properties = fieldState.properties(this)
-    val size = properties.size
+    val size = fieldState.properties(type).size
     return mutableMapOf(
         id to EntityAction(
-            MoveAction(position, true, true),
+            MoveAction(position.randomShift(3*size, 3*size).limitToMap(), true, true),
             BuildAction(type, position),
             null,
             null
         )
     )
 }
+
+private fun Vec2Int.randomShift(dx: Int, dy: Int) = Vec2Int(
+    Random.nextInt(x - dx, x + dx),
+    Random.nextInt(y - dy, y + dy)
+)
+
+private fun Vec2Int.limitToMap() = Vec2Int(
+    x.coerceIn(0..globalSettings.mapSize),
+    y.coerceIn(0..globalSettings.mapSize))
 
 fun List<Entity>.closest(position: Vec2Int) = minByOrNull { distance(it.position, position) }
 
@@ -127,7 +139,7 @@ private fun List<Entity>.collect() = act {
     )
 }
 
-class MetaAction(val name: String = "", val decoder: (FieldState) -> MutableMap<Int, EntityAction>?) {
+class MetaAction(val name: String = "", val decoder: MetaAction.(FieldState) -> MutableMap<Int, EntityAction>?) {
     fun DecodeToAction(state: FieldState) = Action(decoder(state) ?: mutableMapOf())
     fun log(): MetaAction {
         println(this)
