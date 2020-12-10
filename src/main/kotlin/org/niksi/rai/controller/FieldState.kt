@@ -26,6 +26,14 @@ class FieldState(
         ordersCache.addAll(entities.map { OrderItem(it.id, metaAction) })
     }
 
+    fun recordOrder(entity: Entity, metaAction: MetaAction) {
+        ordersCache.add(OrderItem(entity.id, metaAction))
+    }
+
+    fun canceldOrder(entity: Entity) {
+        ordersCache.removeIf { it.id == entity.id }
+    }
+
     val resources = entities.filterType(RESOURCE)
     val nonResources = entities.filterNotType(RESOURCE)
 
@@ -36,6 +44,7 @@ class FieldState(
     val myMelee = my.filterType(MELEE_UNIT)
     val myRanged = my.filterType(RANGED_UNIT)
     val myInfantry = listOf(myMelee, myRanged).flatten()
+    val myFreeInfantry = myInfantry.free()
 
     val myBuildings = my.filter { it.isBuilding }
     val myBuilderBase = myBuildings.firstOrNull { it.entityType == BUILDER_BASE }

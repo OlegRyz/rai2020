@@ -16,11 +16,11 @@ val COLLECT_RESOURCES = MetaAction("COLLECT_RESOURCES") {
 }
 
 val ATTACK_ENEMY = MetaAction("ATTACK_ENEMY") {
-    it.myInfantry.attackClosestToYou(it.enemies)
+    it.myFreeInfantry.attackClosestToYou(it.enemies)
 }
 
 val GEATHER_ARMY = MetaAction("GEATHER_ARMY") {
-    it.myInfantry.move((it.myBuildings.middlePoint() to globalSettings.center).transit(0.2))
+    it.myFreeInfantry.move((it.myBuildings.middlePoint() to globalSettings.center).transit(0.2))
 }
 
 fun Pair<Vec2Int, Vec2Int>.transit(share: Double) = Vec2Int(
@@ -29,6 +29,8 @@ fun Pair<Vec2Int, Vec2Int>.transit(share: Double) = Vec2Int(
 )
 
 val BUILD_UNIT_BUILDER = MetaAction("BUILD_UNIT_BUILDER") {
+    it.myMeleeBase?.stopProduction()
+    it.myRangedBase?.stopProduction()
     it.myBuilderBase?.produce(it, EntityType.BUILDER_UNIT)
 }
 
@@ -39,10 +41,45 @@ val BUILD_BASE_RANGED = MetaAction("BUILD_BASE_RANGED") {
 
 
 val BUILD_UNIT_MELEE = MetaAction("BUILD_UNIT_MELEE") {
+    it.myBuilderBase?.stopProduction()
+    it.myRangedBase?.stopProduction()
     it.myMeleeBase?.produce(it, EntityType.MELEE_UNIT)
 }
 
+val STOP_MAD_PRINTER = MetaAction("STOP_MAD_PRINTER") {
+    it.myInfantry.choose(it, this)?.run {
+        it.recordOrder(this, this@MetaAction)
+        move(it.myBuilderBase?.gatePosition(it))
+    }
+}
+
+val UNLEASH_MAD_PRINTER = MetaAction("UNLEASH_MAD_PRINTER") {
+    it.myInfantry.choose(it, STOP_MAD_PRINTER)?.run {
+        it.canceldOrder(this)
+        move(this.position.shift(2,2))
+    }
+}
+
+private fun Vec2Int.shift(x: Int, y: Int) = Vec2Int(this.x + x, this.y + y)
+
+private fun Entity.gatePosition(fieldState: FieldState): Vec2Int {
+    val size = fieldState.properties(this.entityType).size
+    return Vec2Int(position.x + size, position.y + size - 1)
+}
+
+fun Entity.stopProduction() = mutableMapOf(
+    id to EntityAction(
+        null,
+        BuildAction(EntityType.BUILDER_UNIT, Vec2Int(0,0)),
+        null,
+        null
+    )
+)
+
+
 val BUILD_UNIT_RANGED = MetaAction("BUILD_UNIT_RANGED") {
+    it.myBuilderBase?.stopProduction()
+    it.myMeleeBase?.stopProduction()
     it.myRangedBase?.produce(it, EntityType.RANGED_UNIT)
 }
 
@@ -126,14 +163,25 @@ private fun List<Entity>.attackClosestToYou(targets: List<Entity>) = act {
     }
 }
 
-private fun List<Entity>.move(middlePoint: Vec2Int) = act {
+private fun List<Entity>.move(point: Vec2Int) = act {
     EntityAction(
-        MoveAction(middlePoint, true, false),
+        MoveAction(point, true, true),
         null,
         AttackAction(null, AutoAttack(10, arrayOf(EntityType.MELEE_UNIT, EntityType.RANGED_UNIT))),
-        null
-    )
+        null)
 }
+
+private fun Entity.move(point: Vec2Int?) = mutableMapOf(
+    id to when (point) {
+        null -> EntityAction()
+        else -> EntityAction(
+            MoveAction(point, true, true),
+            null,
+            AttackAction(null, AutoAttack(10, arrayOf(EntityType.MELEE_UNIT, EntityType.RANGED_UNIT))),
+            null
+        )
+    }
+)
 
 fun List<Entity>.middlePoint(): Vec2Int {
     val x = this.map { it.position.x }.average()
