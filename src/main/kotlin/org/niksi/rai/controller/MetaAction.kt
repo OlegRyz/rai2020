@@ -12,6 +12,10 @@ val COLLECT_RESOURCES = MetaAction("COLLECT_RESOURCES") {
     it.myBuilders.run {
         it.recordOrder(this, this@MetaAction)
         collect(it)
+    }.also { res ->
+        it.myTurrets.act { EntityAction(null,null, AttackAction(null, AutoAttack(50, arrayOf(
+            EntityType.BUILDER_UNIT, EntityType.MELEE_UNIT, EntityType.RANGED_UNIT))), null
+        ) }
     }
 }
 
@@ -87,7 +91,9 @@ val BUILD_HOUSE = MetaAction("BUILD_HOUSE") {
     val field = createField(it)
     val spot = field.findEmptySpot(it.properties(EntityType.HOUSE).size)
     if (spot != null) {
-        it.myBuilders.closest(spot)?.build(it, EntityType.HOUSE, spot)
+        it.myBuilders.closest(spot)?.build(it, EntityType.HOUSE, spot).also { result ->
+            it.myFreeInfantry.gaters(it).move((it.myBuildings.middlePoint() to globalSettings.center).transit(0.2))
+        }
     } else {
         mutableMapOf()
     }
@@ -127,10 +133,19 @@ private fun Array<BooleanArray>.fillB(fromIndex: Int, toIndex: Int, rowFiller: (
 
 
 val REPAIR_BUILDINGS = MetaAction("REPAIR_BUILDINGS") {
-    it.myBuilders.choose(it, this)?.repair(it, it.myUnhealthyBuildings)
+    it.myBuilders.choose(it, this)?.repair(it, it.myUnhealthyBuildings).also { result ->
+        it.myFreeInfantry.gaters(it).move((it.myBuildings.middlePoint() to globalSettings.center).transit(0.2))
+    }
 }
 
-private fun Entity.repair(it: FieldState, entities: List<Entity>) = mutableMapOf(
+private fun List<Entity>.gaters(fieldState: FieldState): List<Entity> {
+    val gates = listOf(fieldState.myRangedBase?.position?.x, fieldState.myMeleeBase?.position?.x) to
+    listOf(fieldState.myRangedBase?.position?.y, fieldState.myMeleeBase?.position?.y)
+    return filter { it.position.x in gates.first && it.position.y in gates.second}
+
+}
+
+private fun Entity.repair(state: FieldState, entities: List<Entity>) = mutableMapOf(
     id to when (val closest = entities.closest(position)) {
         null -> EntityAction(
             null,
@@ -192,9 +207,9 @@ fun List<Entity>.closest(position: Vec2Int) = minByOrNull { distance(it.position
 private fun List<Entity>.attackClosestToYou(targets: List<Entity>) = act {
     val closest = targets.closest(it.position)
     when (closest) {
-        null -> EntityAction(null, null, null, null);
+        null -> EntityAction(null, null, null, null)
         else -> EntityAction(
-            MoveAction(closest.position, false, false),
+            MoveAction(closest.position, true, true),
             null,
             AttackAction(closest.id, null),
             null
@@ -228,9 +243,6 @@ fun List<Entity>.middlePoint(): Vec2Int {
     return Vec2Int(x.toInt(), y.toInt())
 }
 
-fun runningAverage(i: Int, acc: Int, item: Int) = acc + (item - 1) / i
-
-
 fun distance(position: Vec2Int, target: Vec2Int) = manhDistance(position.x, position.y, target.x, target.y)
 
 fun manhDistance(x: Int, y: Int, x1: Int, y1: Int) = abs(x - x1) + abs(y - y1)
@@ -244,7 +256,7 @@ private fun Entity.produce(
 ): MutableMap<Int, EntityAction> {
     val properties = fieldState.properties(this)
     val size = properties.size
-    var gatePosition = Vec2Int(position.x + size, position.y + size - 1)
+    val gatePosition = Vec2Int(position.x + size, position.y + size - 1)
     return mutableMapOf(
         id to EntityAction(
             null,
