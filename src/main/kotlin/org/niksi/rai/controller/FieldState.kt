@@ -13,7 +13,7 @@ private val Entity.isBuilding: Boolean
 
 
 class FieldState(
-    entities: Array<Entity>,
+    val entities: Array<Entity>,
     val entityProperties: MutableMap<EntityType, EntityProperties>,
     players: Array<Player>,
     myId: Int,

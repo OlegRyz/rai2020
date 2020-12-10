@@ -84,8 +84,47 @@ val BUILD_UNIT_RANGED = MetaAction("BUILD_UNIT_RANGED") {
 }
 
 val BUILD_HOUSE = MetaAction("BUILD_HOUSE") {
-    it.myBuilders.choose(it, this)?.build(it, EntityType.HOUSE)
+    val field = createField(it)
+    val spot = field.findEmptySpot(it.properties(EntityType.HOUSE).size)
+    if (spot != null) {
+        it.myBuilders.closest(spot)?.build(it, EntityType.HOUSE, spot)
+    } else {
+        mutableMapOf()
+    }
 }
+
+private fun Array<BooleanArray>.findEmptySpot(spotSize: Int): Vec2Int? {
+    return (0..100).map {
+        Vec2Int(Random.nextInt(size - spotSize), Random.nextInt(size - spotSize))
+    }.firstOrNull { vector ->
+        val rows = this.slice(vector.y..(vector.y + spotSize))
+        rows.all { it.slice(vector.x..(vector.x + spotSize)).all{!it}}
+    }
+}
+
+fun createField(state: FieldState): Array<BooleanArray> {
+    val start = 0
+    val squareSize = 20
+    val square = start..squareSize
+    val entities = state.entities.filter {
+        it.position.x in square && it.position.y in square
+    }
+    val field = Array(squareSize) { BooleanArray(squareSize) }
+
+    entities.forEach {
+        val entitySize = state.properties(it).size
+        field.fillB(it.position.y, it.position.y + entitySize) { row -> row.fill( true, it.position.x,
+            (it.position.x + entitySize).coerceAtMost(row.size))}
+    }
+    return field
+}
+
+private fun Array<BooleanArray>.fillB(fromIndex: Int, toIndex: Int, rowFiller: (BooleanArray)->Unit) {
+    for(i in (fromIndex..toIndex.coerceAtMost(size - 1))) {
+        rowFiller(this[i])
+    }
+}
+
 
 val REPAIR_BUILDINGS = MetaAction("REPAIR_BUILDINGS") {
     it.myBuilders.choose(it, this)?.repair(it, it.myUnhealthyBuildings)
