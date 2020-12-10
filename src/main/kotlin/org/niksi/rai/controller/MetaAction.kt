@@ -25,6 +25,18 @@ val ATTACK_ENEMY = MetaAction("ATTACK_ENEMY") {
     it.myFreeInfantry.attackClosestToYou(it, it.enemies)
 }
 
+val DEFEND_BUILDINGS = MetaAction("DEFEND_BUILDINGS") {
+    val targets = it.enemyInfantry.near(it.myBuildings, 20)
+    if (targets.isEmpty()) {
+        mutableMapOf()
+    } else {
+        it.myInfantry.near(it.myBuildings, 50).attackClosestToYou(it, targets)
+    }
+}
+
+fun List<Entity>.near(myBuildings: List<Entity>, range: Int) = filter { enemy -> myBuildings.any { building -> distance(enemy.position, building.position)< range}}
+
+
 val GEATHER_ARMY = MetaAction("GEATHER_ARMY") {
     it.myFreeInfantry.move((it.myBuildings.middlePoint() to globalSettings.center).transit(0.2))
 }

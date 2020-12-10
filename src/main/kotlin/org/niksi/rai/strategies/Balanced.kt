@@ -54,6 +54,11 @@ val Balanced = StrategicDsl {
         (it.enemyInfantry.any { enemy -> it.my.any { distance(enemy.position, it.position) < 13 } }).isAlwaysNeeded()
     }
 
+    DEFEND_BUILDINGS.rule("") {
+        true.isNotAcceptable()
+        (it.enemies.near(it.myBuildings, 20).any()).isAlwaysNeeded()
+    }
+
     GEATHER_ARMY.rule("") {
         true.isGood()
     }
