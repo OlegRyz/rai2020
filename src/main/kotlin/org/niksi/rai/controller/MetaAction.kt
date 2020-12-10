@@ -167,7 +167,7 @@ private fun Entity.repair(state: FieldState, entities: List<Entity>) = mutableMa
 
 
 fun List<Entity>.choose(state: FieldState, metaAction: MetaAction): Entity? {
-    val id = state.ordersCache.find { it.order == metaAction }?.id
+    val id = state.ordersCache.getId(metaAction).firstOrNull()
     val ordered = state.myEntityBy(id)
     return ordered ?: closest(state.myBuilderBase?.position ?: state.myBuilders.middlePoint())
 }
@@ -303,7 +303,7 @@ fun List<Entity>.allInRadius(radius:Int, center: Vec2Int) = filter { distance(it
 fun List<Entity>.randomInRadius(radius:Int, center: Vec2Int) = allInRadius(radius, center).randomOrNull()
 
 class MetaAction(val name: String = "", val decoder: MetaAction.(FieldState) -> MutableMap<Int, EntityAction>?) {
-    fun DecodeToAction(state: FieldState) = Action(decoder(state) ?: mutableMapOf())
+    fun DecodeToAction(state: FieldState) = decoder(state) ?: mutableMapOf()
     fun log(): MetaAction {
         println(this)
         return this

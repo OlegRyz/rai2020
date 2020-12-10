@@ -22,17 +22,11 @@ class FieldState(
     fun properties(entity: Entity) = entityProperties[entity.entityType]!!
     fun properties(entityType: EntityType) = entityProperties[entityType]!!
     fun simulate(metaAction: MetaAction) = ImaginaryState(this, metaAction)
-    fun recordOrder(entities: List<Entity>, metaAction: MetaAction) {
-        ordersCache.addAll(entities.map { OrderItem(it.id, metaAction) })
-    }
+    fun recordOrder(entities: List<Entity>, metaAction: MetaAction) = ordersCache.record(entities, metaAction)
 
-    fun recordOrder(entity: Entity, metaAction: MetaAction) {
-        ordersCache.add(OrderItem(entity.id, metaAction))
-    }
+    fun recordOrder(entity: Entity, metaAction: MetaAction) = ordersCache.record(entity, metaAction)
 
-    fun canceldOrder(entity: Entity) {
-        ordersCache.removeIf { it.id == entity.id }
-    }
+    fun canceldOrder(entity: Entity) = ordersCache.remove(entity.id)
 
     val resources = entities.filterType(RESOURCE)
     val nonResources = entities.filterNotType(RESOURCE)
@@ -40,7 +34,7 @@ class FieldState(
     val me = players.first { it.id == myId }
     val my = nonResources.filterPlayerId(myId)
     val myBuilders = my.filterType(BUILDER_UNIT)
-    val myHouseBuilder: Entity? = myBuilders.firstOrNull{it.id == ordersCache.firstOrNull{ it.order == BUILD_HOUSE }?.id ?: -1}
+    val myHouseBuilder: Entity? = myBuilders.firstOrNull{it.id == ordersCache.getId(BUILD_HOUSE).firstOrNull()}
     val myFreeBuilders = myBuilders.free()
     val myMelee = my.filterType(MELEE_UNIT)
     val myRanged = my.filterType(RANGED_UNIT)
@@ -63,13 +57,9 @@ class FieldState(
     val enemyRanged = enemies.filterType(RANGED_UNIT)
     val enemyInfantry = listOf(enemyMelee, enemyRanged).flatten()
     val enemyUnits = listOf(enemyMelee, enemyRanged, enemyBuilders).flatten()
-    fun List<Entity>.free() = filterNot { ordersCache.any {orderItem -> it.id == orderItem.id } }
+    fun List<Entity>.free(): List<Entity> = filterNot{ ordersCache.keys.contains(it.id) }
     fun myEntityBy(id: Int?) = if (id == null) null else my.firstOrNull{ it.id == id }
 }
-
-class OrdersCache: MutableList<OrderItem> by mutableListOf()
-
-data class OrderItem(val id: Int, val order: MetaAction)
 
 private fun List<Entity>.filterPlayerId(playerId: Int) = filter { it.playerId == playerId }
 private fun List<Entity>.filterNotPlayerId(playerId: Int) = filterNot { it.playerId == playerId }

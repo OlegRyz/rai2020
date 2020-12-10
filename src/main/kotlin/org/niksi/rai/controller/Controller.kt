@@ -27,7 +27,14 @@ class Controller(
 
     fun tick(currentTick: Int, entities: Array<Entity>, entityProperties: MutableMap<EntityType, EntityProperties>, players: Array<Player>) {
         val state = FieldState(entities, entityProperties, players, myId, ordersCache)
-        bestAction = thoughtfulActions().takeBest(state).log().DecodeToAction(state)
+        val currentActions = thoughtfulActions().takeBest(state).log().DecodeToAction(state)
+        val reccurentActions = executeOrders(state)
+        currentActions.putAll(reccurentActions)
+        bestAction = Action(currentActions)
+    }
+
+    private fun executeOrders(state: FieldState): Map<out Int, EntityAction> {
+        return state.ordersCache.executeOrders()
     }
 
     private fun thoughtfulActions(): Iterable<MetaAction> = listOf(

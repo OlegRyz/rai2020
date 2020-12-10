@@ -12,12 +12,12 @@ val Balanced = StrategicDsl {
 
     STOP_MAD_PRINTER.rule("Stop mad printer") {
         true.isNotAcceptable()
-        (it.myBuilders.count() > 3 && it.myInfantry.count() < 5 && it.ordersCache.none{it.order == STOP_MAD_PRINTER})
+        (it.myBuilders.count() > 3 && it.myInfantry.count() < 5 && it.ordersCache.getId(STOP_MAD_PRINTER).isEmpty())
             .isAlwaysNeeded()
     }
 
     UNLEASH_MAD_PRINTER.rule("Unleash mad printer") {
-        val isStopperHere = it.ordersCache.any { it.order == STOP_MAD_PRINTER }
+        val isStopperHere = it.ordersCache.getId(STOP_MAD_PRINTER).any()
         (!isStopperHere).isNotAcceptable()
         (isStopperHere && (it.myInfantry.count() / it.myBuilders.count()) > 2)
             .isAlwaysNeeded()
@@ -66,7 +66,7 @@ val Balanced = StrategicDsl {
 
     REPAIR_BUILDINGS.rule("") {
         (it.myUnhealthyBuildings.any()).isAlwaysNeeded()
-        (!it.myUnhealthyBuildings.any() || it.ordersCache.filter { it.order == REPAIR_BUILDINGS }.count() > 2).isNotAcceptable()
+        (!it.myUnhealthyBuildings.any() || it.ordersCache.getId(REPAIR_BUILDINGS).count() > 2).isNotAcceptable()
     }
 }
 
