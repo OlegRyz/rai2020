@@ -1,7 +1,9 @@
 package org.niksi.rai.controller
 
 import model.*
+import java.awt.geom.Point2D
 import kotlin.math.abs
+import kotlin.math.ceil
 import kotlin.random.Random
 
 val DO_NOTHING = MetaAction("DO_NOTHING") {
@@ -20,7 +22,7 @@ val COLLECT_RESOURCES = MetaAction("COLLECT_RESOURCES") {
 }
 
 val ATTACK_ENEMY = MetaAction("ATTACK_ENEMY") {
-    it.myFreeInfantry.attackClosestToYou(it.enemies)
+    it.myFreeInfantry.attackClosestToYou(it, it.enemies)
 }
 
 val GEATHER_ARMY = MetaAction("GEATHER_ARMY") {
@@ -202,19 +204,30 @@ private fun Vec2Int.limitToMap() = Vec2Int(
     y.coerceIn(0..globalSettings.mapSize)
 )
 
-fun List<Entity>.closest(position: Vec2Int) = minByOrNull { distance(it.position, position) }
+fun List<Entity>.closest(position: Vec2Int) = minByOrNull { manhDistance(it.position, position) }
 
-private fun List<Entity>.attackClosestToYou(targets: List<Entity>) = act {
+private fun List<Entity>.attackClosestToYou(fieldState: FieldState, targets: List<Entity>) = act {
     val closest = targets.closest(it.position)
     when (closest) {
         null -> EntityAction(null, null, null, null)
-        else -> EntityAction(
-            MoveAction(closest.position, true, true),
-            null,
-            AttackAction(closest.id, null),
-            null
-        )
+        else -> {
+            val distance = fieldState.properties(it.entityType).attack?.attackRange ?: 0
+            val position = (closest.position to it.position).transitToDistance(distance)
+            EntityAction(
+                MoveAction(position, true, true),
+                null,
+                AttackAction(closest.id, null),
+                null
+            )
+        }
     }
+}
+
+private fun Pair<Vec2Int, Vec2Int>.transitToDistance(expDistance: Int):Vec2Int {
+    val dx = expDistance * (second.x - first.x) / distance(first, second)
+    val dy = expDistance * (second.y - first.y) / distance(first, second)
+
+    return Vec2Int(ceil(first.x + dx).toInt(), ceil(first.y + dy).toInt())
 }
 
 private fun List<Entity>.move(point: Vec2Int) = act {
@@ -243,7 +256,9 @@ fun List<Entity>.middlePoint(): Vec2Int {
     return Vec2Int(x.toInt(), y.toInt())
 }
 
-fun distance(position: Vec2Int, target: Vec2Int) = manhDistance(position.x, position.y, target.x, target.y)
+fun distance(position: Vec2Int, target: Vec2Int) = Point2D.distance(position.x.toDouble(),
+    position.y.toDouble(), target.x.toDouble(), target.y.toDouble())
+fun manhDistance(position: Vec2Int, target: Vec2Int) = manhDistance(position.x, position.y, target.x, target.y)
 
 fun manhDistance(x: Int, y: Int, x1: Int, y1: Int) = abs(x - x1) + abs(y - y1)
 
