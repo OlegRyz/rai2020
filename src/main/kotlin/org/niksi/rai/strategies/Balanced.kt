@@ -17,13 +17,13 @@ val Balanced = StrategicDsl {
     }
 
     UNLEASH_MAD_PRINTER.rule("Unleash mad printer") {
-        true.isNotAcceptable()
-        (it.ordersCache.any{it.order == STOP_MAD_PRINTER} &&
-                (it.myInfantry.count() / it.myBuilders.count()) > 2)
+        val isStopperHere = it.ordersCache.any { it.order == STOP_MAD_PRINTER }
+        (!isStopperHere).isNotAcceptable()
+        (isStopperHere && (it.myInfantry.count() / it.myBuilders.count()) > 2)
             .isAlwaysNeeded()
-        (it.ordersCache.any{it.order == STOP_MAD_PRINTER} &&
-                it.myBuilders.count() < 4)
+        (isStopperHere && it.myBuilders.count() < 4)
             .isAlwaysNeeded()
+        (isStopperHere && it.me.resource > 100).isAlwaysNeeded()
     }
 
     BUILD_UNIT_MELEE.rule("Builders are Limited") {

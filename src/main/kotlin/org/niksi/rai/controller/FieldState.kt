@@ -37,6 +37,7 @@ class FieldState(
     val resources = entities.filterType(RESOURCE)
     val nonResources = entities.filterNotType(RESOURCE)
 
+    val me = players.first { it.id == myId }
     val my = nonResources.filterPlayerId(myId)
     val myBuilders = my.filterType(BUILDER_UNIT)
     val myHouseBuilder: Entity? = myBuilders.firstOrNull{it.id == ordersCache.firstOrNull{ it.order == BUILD_HOUSE }?.id ?: -1}
