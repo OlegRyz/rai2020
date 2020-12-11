@@ -27,10 +27,14 @@ class Controller(
 
     fun tick(currentTick: Int, entities: Array<Entity>, entityProperties: MutableMap<EntityType, EntityProperties>, players: Array<Player>) {
         val state = FieldState(entities, entityProperties, players, myId, ordersCache)
-        val currentActions = thoughtfulActions().takeBest(state).log().fold(mutableMapOf<Int,EntityAction> ()) { acc, item ->
-            acc.putAll(item.DecodeToAction(state))
-            acc
-        }
+        val currentActions = thoughtfulActions()
+            .takeBest(state)
+            .addReccurent(state)
+            .log()
+            .fold(mutableMapOf<Int, EntityAction>()) { acc, item ->
+                acc.putAll(item.DecodeToAction(state))
+                acc
+            }
         val reccurentActions = executeOrders(state)
         currentActions.putAll(reccurentActions)
         bestAction = Action(currentActions)
@@ -46,6 +50,12 @@ class Controller(
         DEFEND_BUILDINGS)
 
     fun Iterable<MetaAction>.takeBest(state: FieldState) = sortedBy { predictor.predict(it, state) }.takeLast(2)
+
+    fun Iterable<MetaAction>.addReccurent(state: FieldState) = this.toList().toMutableList().apply {
+        this.addAll(reccurent())
+    }
+
+    private fun reccurent() = listOf(CLEANUP_ORDERS)
 
     fun <T> T.log(): T {
         println()

@@ -60,6 +60,7 @@ class FieldState(
     val enemyUnits = listOf(enemyMelee, enemyRanged, enemyBuilders).flatten()
     fun List<Entity>.free(): List<Entity> = filterNot { ordersCache.keys.contains(it.id) }
     fun myEntityBy(id: Int?) = if (id == null) null else my.firstOrNull { it.id == id }
+    fun myEntityBy(ids: List<Int>) = my.filter { it.id in ids }
     fun canceldOrder(action: MetaAction) {
         val keys = ordersCache.entries.filter { it.value.metaAction.isSame(action) }.map { it.key }
         keys.forEach { ordersCache.remove(it) }

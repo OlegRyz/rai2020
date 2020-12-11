@@ -19,7 +19,21 @@ val COLLECT_RESOURCES = MetaAction("COLLECT_RESOURCES") {
 }
 
 val ATTACK_ENEMY = MetaAction("ATTACK_ENEMY") {
-    it.myFreeInfantry.attackClosestToYou(it, it.enemies)
+    it.myFreeInfantry.run {
+        it.recordOrder(this, this@MetaAction)
+        attackClosestToYou(it, it.enemies)
+    }
+}
+
+val CLEANUP_ORDERS = MetaAction("CLEANUP_ORDERS") {
+    val attackers = it.myEntityBy(it.ordersCache.getId(ATTACK_ENEMY))
+    attackers.near(it.enemies, 20).run {
+        attackers.forEach { previous ->
+            it.canceldOrder(previous)
+        }
+        it.recordOrder(this, ATTACK_ENEMY)
+        attackClosestToYou(it, it.enemies)
+    }
 }
 
 val DEFEND_BUILDINGS = MetaAction("DEFEND_BUILDINGS") {
@@ -31,7 +45,12 @@ val DEFEND_BUILDINGS = MetaAction("DEFEND_BUILDINGS") {
     }
 }
 
-fun List<Entity>.near(myBuildings: List<Entity>, range: Int) = filter { enemy -> myBuildings.any { building -> distance(enemy.position, building.position)< range}}
+fun List<Entity>.near(targets: List<Entity>, range: Int) =
+    filter { origin ->
+        targets.any {
+                target -> distance(target.position, origin.position)< range
+        }
+    }
 
 
 val GEATHER_ARMY = MetaAction("GEATHER_ARMY") {
