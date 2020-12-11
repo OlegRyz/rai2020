@@ -54,7 +54,7 @@ fun List<Entity>.near(targets: List<Entity>, range: Int) =
 
 
 val GEATHER_ARMY = MetaAction("GEATHER_ARMY") {
-    it.myFreeInfantry.move((it.myBuildings.middlePoint() to globalSettings.center).transit(0.2))
+    it.myFreeInfantry.move(Vec2Int(21,21))
 }
 
 fun Pair<Vec2Int, Vec2Int>.transit(share: Double) = Vec2Int(
