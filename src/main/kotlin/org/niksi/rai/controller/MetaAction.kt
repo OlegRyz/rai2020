@@ -299,10 +299,15 @@ private fun List<Entity>.attackClosestToYou(fieldState: FieldState, targets: Lis
 }
 
 private fun Pair<Vec2Int, Vec2Int>.transitToDistance(expDistance: Int):Vec2Int {
-    val dx = expDistance * (second.x - first.x) / distance(first, second)
-    val dy = expDistance * (second.y - first.y) / distance(first, second)
+    val curDistance = distance(first, second)
+    return if (curDistance == 0) {
+        Vec2Int(first.x, first.y + expDistance)
+    } else {
+        val dx = expDistance * (second.x - first.x) / curDistance
+        val dy = expDistance * (second.y - first.y) / curDistance
 
-    return Vec2Int((first.x + dx).toInt(), (first.y + dy).toInt())
+        Vec2Int((first.x + dx).toInt(), (first.y + dy).toInt())
+    }
 }
 
 private fun List<Entity>.move(point: Vec2Int) = act {
@@ -380,10 +385,7 @@ fun List<Entity>.randomInRadius(radius:Int, center: Vec2Int) = allInRadius(radiu
 
 class MetaAction(val name: String = "", val decoder: MetaAction.(FieldState) -> MutableMap<Int, EntityAction>?) {
     fun DecodeToAction(state: FieldState) = decoder(state) ?: mutableMapOf()
-    fun log(): MetaAction {
-        println(this)
-        return this
-    }
+
 
     override fun toString() = name
     fun isSame(metaAction: MetaAction) = name == metaAction.name
