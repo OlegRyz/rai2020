@@ -1,6 +1,7 @@
 package org.niksi.rai.strategies
 
 import model.Entity
+import model.EntityType
 import org.niksi.rai.controller.*
 
 val Balanced = StrategicDsl {
@@ -64,14 +65,20 @@ val Balanced = StrategicDsl {
     }
 
     BUILD_HOUSE.rule("Build a house if food is low") {
-        (it.myPopulationLimit - it.myPopulation < 3
-                && !it.myUnhealthyBuildings.any()).isGood()
-        (it.myPopulationLimit - it.myPopulation > 5).isNotAcceptable()
+        true.isGood()
+        (it.myPopulationLimit - it.myPopulation < 3).isAlwaysNeeded()
+        (it.myPopulation == 0 || it.myPopulationLimit > 2 * it.myPopulation).isNotAcceptable()
+        (it.me.resource < it.properties(EntityType.HOUSE).initialCost + it.myFreeBuilders.count()).isNotAcceptable()
+        (it.ordersCache.getId(BUILD_HOUSE).count() > 1).isNotAcceptable()
+        if (it.myBuildings.any{!it.active}) {
+            it.canceldOrder(BUILD_HOUSE)
+        }
     }
 
     REPAIR_BUILDINGS_ALL.rule("") {
         (it.myUnhealthyBuildings.any()).isAlwaysNeeded()
-        (it.myUnhealthyBuildings.isEmpty()).isNotAcceptable().run {
+        (it.myUnhealthyBuildings.isEmpty()).isNotAcceptable()
+        if (it.myUnhealthyBuildings.isEmpty()) {
             it.canceldOrder(REPAIR_BUILDINGS_ALL)
         }
     }

@@ -99,10 +99,20 @@ val BUILD_UNIT_RANGED = MetaAction("BUILD_UNIT_RANGED") {
 }
 
 val BUILD_HOUSE = MetaAction("BUILD_HOUSE") {
-    val field = createField(it)
-    val spot = field.findEmptySpot(it.properties(EntityType.HOUSE).size)
+    val spot = findEmptySpot(it.properties(EntityType.HOUSE).size, it)
+
     if (spot != null) {
-        it.myBuilders.closest(spot)?.build(it, EntityType.HOUSE, spot).also { result ->
+        spot.x += 3
+        spot.y += 2
+        it
+            .myBuilders
+            .closest(spot)
+            ?.also { builder ->
+                println("Spot = ${spot.toStr()}; ${builder.position.toStr()}; Id: ${builder.id}")
+                it.recordOrder(builder, this)
+            }
+            ?.build(it, EntityType.HOUSE, spot)
+            .also { result ->
             it.myFreeInfantry.gaters(it).move((it.myBuildings.middlePoint() to globalSettings.center).transit(0.2))
         }
     } else {
@@ -110,14 +120,21 @@ val BUILD_HOUSE = MetaAction("BUILD_HOUSE") {
     }
 }
 
-private fun Array<BooleanArray>.findEmptySpot(spotSize: Int): Vec2Int? {
-    return (0..100).map {
-        Vec2Int(Random.nextInt(size - spotSize), Random.nextInt(size - spotSize))
-    }.firstOrNull { vector ->
-        val rows = this.slice(vector.y..(vector.y + spotSize))
-        rows.all { it.slice(vector.x..(vector.x + spotSize)).all{!it}}
-    }
+private fun Vec2Int.toStr() = "($x , $y)"
+
+val SpotChoice = listOf(List(7){it -> Vec2Int(0,it * 3)}, List(7){it -> Vec2Int(it * 3, 0)}).flatten()
+private fun findEmptySpot(spotSize: Int, state: FieldState): Vec2Int? {
+    return SpotChoice.firstOrNull { available(it, state, spotSize) }
 }
+
+fun available(spot: Vec2Int, state: FieldState, size: Int) =
+    state.entities.all { notIntersect(spot, it.position, size, state.properties(it).size) }
+
+fun notIntersect(a: Vec2Int, b: Vec2Int, sizeA: Int, sizeB: Int) =
+    a.x + sizeA - 1 < b.x ||
+            b.x + sizeB - 1 < a.x ||
+            a.y + sizeA - 1 < b.y ||
+            b.y + sizeB - 1 < a.y
 
 fun createField(state: FieldState): Array<BooleanArray> {
     val start = 0
@@ -162,17 +179,21 @@ val REPAIR_BUILDINGS = MetaAction("REPAIR_BUILDINGS") { state ->
 
 val REPAIR_BUILDINGS_ALL = MetaAction("REPAIR_BUILDINGS_ALL") { state ->
     val buildingsNumber =  state.myUnhealthyBuildings.count()
-    state
-        .myUnhealthyBuildings
-        .sortedBy { it.health }
-        .foldIndexed(mutableMapOf()) { i, acc, building ->
-            val portion = (state.myBuilders.size / 2) / buildingsNumber
-            state.myBuilders
-                .sortedBy { distance(it.position, building.position) }
-                .take(portion * (buildingsNumber - i))
-                .also { state.recordOrder(it, this) }
-                .repair(state, building, acc)
-        }
+    if (buildingsNumber > 0) {
+        state
+            .myUnhealthyBuildings
+            .sortedBy { it.health }
+            .foldIndexed(mutableMapOf()) { i, acc, building ->
+                val portion = (state.myBuilders.size / 2) / buildingsNumber
+                state.myBuilders
+                    .sortedBy { distance(it.position, building.position) }
+                    .take(portion * (buildingsNumber - i))
+                    .also { state.recordOrder(it, this) }
+                    .repair(state, building, acc)
+            }
+    } else {
+        mutableMapOf()
+    }
 }
 
 
@@ -217,10 +238,13 @@ private fun Entity.repair(state: FieldState, entities: List<Entity>) = mutableMa
 )
 
 
-fun List<Entity>.choose(state: FieldState, metaAction: MetaAction): Entity? {
+fun List<Entity>.choose(state: FieldState,
+                        metaAction: MetaAction,
+                        position: Vec2Int? = null
+): Entity? {
     val id = state.ordersCache.getId(metaAction).firstOrNull()
     val ordered = state.myEntityBy(id)
-    return ordered ?: closest(state.myBuilderBase?.position ?: state.myBuilders.middlePoint())
+    return ordered ?: closest(position ?: state.myBuilderBase?.position ?: state.myBuilders.middlePoint())
 }
 
 fun Entity.build(
