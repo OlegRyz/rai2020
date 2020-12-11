@@ -102,16 +102,15 @@ val BUILD_HOUSE = MetaAction("BUILD_HOUSE") {
     val spot = findEmptySpot(it.properties(EntityType.HOUSE).size, it)
 
     if (spot != null) {
-        spot.x += 3
-        spot.y += 2
+        val  builderSpot = Vec2Int(spot.x + 3, spot.y + 2)
         it
             .myBuilders
-            .closest(spot)
+            .closest(builderSpot)
             ?.also { builder ->
-                println("Spot = ${spot.toStr()}; ${builder.position.toStr()}; Id: ${builder.id}")
+                println("Spot = ${builderSpot.toStr()}; ${builder.position.toStr()}; Id: ${builder.id}")
                 it.recordOrder(builder, this)
             }
-            ?.build(it, EntityType.HOUSE, spot)
+            ?.build(it, EntityType.HOUSE, builderSpot)
             .also { result ->
             it.myFreeInfantry.gaters(it).move((it.myBuildings.middlePoint() to globalSettings.center).transit(0.2))
         }
