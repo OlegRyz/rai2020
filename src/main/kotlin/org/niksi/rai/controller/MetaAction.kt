@@ -237,8 +237,8 @@ fun Int.build(
     val size = fieldState.properties(type).size
     return mutableMapOf(
         this to EntityAction(
-            MoveAction(position.randomShift(3 * size, 3 * size).limitToMap(), true, true),
-            BuildAction(type, position),
+            MoveAction(position.limitToMap(), false, true),
+            BuildAction(type, Vec2Int(position.x - size, position.y - size + 1)),
             null,
             null
         )
