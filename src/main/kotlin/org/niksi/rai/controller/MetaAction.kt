@@ -278,7 +278,7 @@ private fun Pair<Vec2Int, Vec2Int>.transitToDistance(expDistance: Int):Vec2Int {
     val dx = expDistance * (second.x - first.x) / distance(first, second)
     val dy = expDistance * (second.y - first.y) / distance(first, second)
 
-    return Vec2Int(ceil(first.x + dx).toInt(), ceil(first.y + dy).toInt())
+    return Vec2Int((first.x + dx).toInt(), (first.y + dy).toInt())
 }
 
 private fun List<Entity>.move(point: Vec2Int) = act {
@@ -307,8 +307,9 @@ fun List<Entity>.middlePoint(): Vec2Int {
     return Vec2Int(x.toInt(), y.toInt())
 }
 
-fun distance(position: Vec2Int, target: Vec2Int) = Point2D.distance(position.x.toDouble(),
-    position.y.toDouble(), target.x.toDouble(), target.y.toDouble())
+//fun distance(position: Vec2Int, target: Vec2Int) = Point2D.distance(position.x.toDouble(),
+//    position.y.toDouble(), target.x.toDouble(), target.y.toDouble())
+fun distance(position: Vec2Int, target: Vec2Int) = manhDistance(position.x, position.y, target.x, target.y)
 fun manhDistance(position: Vec2Int, target: Vec2Int) = manhDistance(position.x, position.y, target.x, target.y)
 
 fun manhDistance(x: Int, y: Int, x1: Int, y1: Int) = abs(x - x1) + abs(y - y1)
