@@ -29,8 +29,8 @@ val Balanced = StrategicDsl {
 
     BUILD_UNIT_MELEE.rule("Builders are Limited") {
         (it.myBuilders.count() < 5).isBad()
-        (it.myMelee.count() > 0).isGood()
-        (it.myBuilders.count() > 4).isGood()
+        (it.myMelee.count() > 0).isBad()
+        (it.myBuilders.count() > 4).isBad()
         (it.myBuilders.count() > 5 && 2*it.myInfantry.count() < it.myBuilders.count()).isAlwaysNeeded()
     }
 
