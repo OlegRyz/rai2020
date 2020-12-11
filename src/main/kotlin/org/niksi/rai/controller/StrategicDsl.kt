@@ -2,7 +2,7 @@ package org.niksi.rai.controller
 
 import kotlin.random.Random
 
-class StrategicContext() {
+class StrategicContext(val state: ImaginaryState) {
     var reward = Random.nextDouble()
     fun Boolean.isRandom() {
         if (this) {
@@ -35,6 +35,15 @@ class StrategicContext() {
         }
     }
 
+
+    fun Boolean.alsoCancelOrder(metaAction: MetaAction): Boolean {
+        if (this) {
+            state.fieldState.canceldOrder(metaAction)
+        }
+        return this
+    }
+
+
     val rulesMap = mutableMapOf<MetaAction, (FieldState) -> Unit>()
     fun MetaAction.rule(name: String, function: (FieldState) -> Unit) {
         rulesMap[this] = function
@@ -43,7 +52,7 @@ class StrategicContext() {
 
 class StrategicDsl(val definititon: StrategicContext.() -> Unit) {
 
-    fun calculate(state: ImaginaryState): Double = StrategicContext().run {
+    fun calculate(state: ImaginaryState): Double = StrategicContext(state).run {
         definititon()
         rulesMap[state.metaAction]?.invoke(state.fieldState)
         return reward

@@ -51,7 +51,8 @@ val Balanced = StrategicDsl {
 
     ATTACK_ENEMY.rule("") {
         (it.myInfantry.count() > it.enemyInfantry.count() + 5).isGood()
-        (it.myInfantry.count() < it.enemyInfantry.count()).isNotAcceptable()
+        (it.myInfantry.count() < it.enemyInfantry.count() + 5)
+            .alsoCancelOrder(ATTACK_ENEMY).isNotAcceptable()
         (it.enemyInfantry.any { enemy -> it.my.any { distance(enemy.position, it.position) < 13 } }).isAlwaysNeeded()
     }
 
@@ -77,10 +78,8 @@ val Balanced = StrategicDsl {
 
     REPAIR_BUILDINGS_ALL.rule("") {
         (it.myUnhealthyBuildings.any()).isAlwaysNeeded()
-        (it.myUnhealthyBuildings.isEmpty()).isNotAcceptable()
-        if (it.myUnhealthyBuildings.isEmpty()) {
-            it.canceldOrder(REPAIR_BUILDINGS_ALL)
-        }
+        (it.myUnhealthyBuildings.isEmpty())
+            .alsoCancelOrder(REPAIR_BUILDINGS_ALL).isNotAcceptable()
     }
 
 
