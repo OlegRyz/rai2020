@@ -39,7 +39,7 @@ class Controller(
 
     private fun thoughtfulActions(): Iterable<MetaAction> = listOf(
         DO_NOTHING, COLLECT_RESOURCES, ATTACK_ENEMY, BUILD_UNIT_BUILDER, BUILD_UNIT_RANGED, GEATHER_ARMY,
-        BUILD_HOUSE, REPAIR_BUILDINGS, STOP_MAD_PRINTER, UNLEASH_MAD_PRINTER,
+        BUILD_HOUSE, REPAIR_BUILDINGS_ALL, STOP_MAD_PRINTER, UNLEASH_MAD_PRINTER,
         DEFEND_BUILDINGS)
 
     fun Iterable<MetaAction>.takeBest(state: FieldState) = maxByOrNull { predictor.predict(it, state) } ?: DO_NOTHING

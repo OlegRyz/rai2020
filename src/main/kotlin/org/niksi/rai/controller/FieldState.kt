@@ -34,7 +34,7 @@ class FieldState(
     val me = players.first { it.id == myId }
     val my = nonResources.filterPlayerId(myId)
     val myBuilders = my.filterType(BUILDER_UNIT)
-    val myHouseBuilder: Entity? = myBuilders.firstOrNull{it.id == ordersCache.getId(BUILD_HOUSE).firstOrNull()}
+    val myHouseBuilder: Entity? = myBuilders.firstOrNull { it.id == ordersCache.getId(BUILD_HOUSE).firstOrNull() }
     val myFreeBuilders = myBuilders.free()
     val myMelee = my.filterType(MELEE_UNIT)
     val myRanged = my.filterType(RANGED_UNIT)
@@ -49,7 +49,8 @@ class FieldState(
     val myUnhealthyBuildings = myBuildings.filter { it.health < entityProperties[it.entityType]!!.maxHealth }
 
     val myPopulation = my.fold(0) { acc, entity -> acc + properties(entity).populationUse }
-    val myPopulationLimit = my.fold(0) { acc, entity -> acc + (if (entity.active) properties(entity).populationProvide else 0)}
+    val myPopulationLimit =
+        my.fold(0) { acc, entity -> acc + (if (entity.active) properties(entity).populationProvide else 0) }
 
     val enemies = nonResources.filterNotPlayerId(myId)
     val enemyBuilders = enemies.filterType(BUILDER_UNIT)
@@ -57,8 +58,12 @@ class FieldState(
     val enemyRanged = enemies.filterType(RANGED_UNIT)
     val enemyInfantry = listOf(enemyMelee, enemyRanged).flatten()
     val enemyUnits = listOf(enemyMelee, enemyRanged, enemyBuilders).flatten()
-    fun List<Entity>.free(): List<Entity> = filterNot{ ordersCache.keys.contains(it.id) }
-    fun myEntityBy(id: Int?) = if (id == null) null else my.firstOrNull{ it.id == id }
+    fun List<Entity>.free(): List<Entity> = filterNot { ordersCache.keys.contains(it.id) }
+    fun myEntityBy(id: Int?) = if (id == null) null else my.firstOrNull { it.id == id }
+    fun canceldOrder(action: MetaAction) {
+        val keys = ordersCache.entries.filter { it.value.metaAction.isSame(action) }.map { it.key }
+        keys.forEach { ordersCache.remove(it) }
+    }
 }
 
 private fun List<Entity>.filterPlayerId(playerId: Int) = filter { it.playerId == playerId }

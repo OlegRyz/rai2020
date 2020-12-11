@@ -11,7 +11,8 @@ class OrdersCache: MutableMap<Int,OrderItem> by mutableMapOf() {
     fun record(entities: List<Entity>, metaAction: MetaAction) = putAll(entities.map{ it.id to OrderItem(metaAction)})
     fun record(entitiy: Entity, metaAction: MetaAction) = put(entitiy.id, OrderItem(metaAction))
 
-    fun getId(metaAction: MetaAction): List<Int> = filter { (_, orderItem) -> orderItem.metaAction == metaAction}.keys.toList()
+    fun getId(metaAction: MetaAction): List<Int> = filter { (_, orderItem) ->
+        orderItem.metaAction.isSame(metaAction)}.keys.toList()
 }
 
 data class OrderItem(val metaAction: MetaAction,

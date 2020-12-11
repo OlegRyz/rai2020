@@ -1,9 +1,7 @@
 package org.niksi.rai.controller
 
 import model.*
-import java.awt.geom.Point2D
 import kotlin.math.abs
-import kotlin.math.ceil
 import kotlin.random.Random
 
 val DO_NOTHING = MetaAction("DO_NOTHING") {
@@ -11,8 +9,7 @@ val DO_NOTHING = MetaAction("DO_NOTHING") {
 }
 
 val COLLECT_RESOURCES = MetaAction("COLLECT_RESOURCES") {
-    it.myBuilders.run {
-        it.recordOrder(this, this@MetaAction)
+    it.myFreeBuilders.run {
         collect(it)
     }.also { res ->
         it.myTurrets.act { EntityAction(null,null, AttackAction(null, AutoAttack(50, arrayOf(
@@ -146,17 +143,56 @@ private fun Array<BooleanArray>.fillB(fromIndex: Int, toIndex: Int, rowFiller: (
 }
 
 
-val REPAIR_BUILDINGS = MetaAction("REPAIR_BUILDINGS") {
-    it.myBuilders.choose(it, this)?.repair(it, it.myUnhealthyBuildings).also { result ->
-        it.myFreeInfantry.gaters(it).move((it.myBuildings.middlePoint() to globalSettings.center).transit(0.2))
-    }
+val REPAIR_BUILDINGS = MetaAction("REPAIR_BUILDINGS") { state ->
+    state
+        .myBuilders
+        .choose(state, this, state.myUnhealthyBuildings.firstOrNull()?.position)
+        ?.also {
+            state.recordOrder(it, this@MetaAction)
+        }
+        ?.repair(state, state.myUnhealthyBuildings)
+
+        .run {
+            state
+                .myFreeInfantry
+                .gaters(state)
+                .move((state.myBuildings.middlePoint() to globalSettings.center).transit(0.2))
+        }
 }
+
+val REPAIR_BUILDINGS_ALL = MetaAction("REPAIR_BUILDINGS_ALL") { state ->
+    val buildingsNumber =  state.myUnhealthyBuildings.count()
+    state
+        .myUnhealthyBuildings
+        .sortedBy { it.health }
+        .foldIndexed(mutableMapOf()) { i, acc, building ->
+            val portion = (state.myBuilders.size / 2) / buildingsNumber
+            state.myBuilders
+                .sortedBy { distance(it.position, building.position) }
+                .take(portion * (buildingsNumber - i))
+                .also { state.recordOrder(it, this) }
+                .repair(state, building, acc)
+        }
+}
+
 
 private fun List<Entity>.gaters(fieldState: FieldState): List<Entity> {
     val gates = listOf(fieldState.myRangedBase?.position?.x, fieldState.myMeleeBase?.position?.x) to
     listOf(fieldState.myRangedBase?.position?.y, fieldState.myMeleeBase?.position?.y)
     return filter { it.position.x in gates.first && it.position.y in gates.second}
 
+}
+private fun List<Entity>.repair(state: FieldState, building: Entity, acc: MutableMap<Int, EntityAction>): MutableMap<Int, EntityAction> {
+    acc.putAll(map {
+        it.id to
+                EntityAction(
+                    MoveAction(building.position, true, true),
+                    null,
+                    null,
+                    RepairAction(building.id)
+                )
+    })
+    return acc
 }
 
 private fun Entity.repair(state: FieldState, entities: List<Entity>) = mutableMapOf(
@@ -167,13 +203,16 @@ private fun Entity.repair(state: FieldState, entities: List<Entity>) = mutableMa
             null,
             null
         )
-        else -> EntityAction(
-            MoveAction(closest.position, true, true),
-            null,
-            null,
-            RepairAction(closest.id)
+        else -> {
+            println("RPEAIR: ${closest.position.toStr()} ${closest.id}")
+            EntityAction(
+                MoveAction(closest.position, true, true),
+                null,
+                null,
+                RepairAction(closest.id)
 
-        )
+            )
+        }
     }
 )
 
@@ -322,4 +361,5 @@ class MetaAction(val name: String = "", val decoder: MetaAction.(FieldState) -> 
     }
 
     override fun toString() = name
+    fun isSame(metaAction: MetaAction) = name == metaAction.name
 }

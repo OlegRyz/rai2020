@@ -69,10 +69,14 @@ val Balanced = StrategicDsl {
         (it.myPopulationLimit - it.myPopulation > 5).isNotAcceptable()
     }
 
-    REPAIR_BUILDINGS.rule("") {
+    REPAIR_BUILDINGS_ALL.rule("") {
         (it.myUnhealthyBuildings.any()).isAlwaysNeeded()
-        (!it.myUnhealthyBuildings.any() || it.ordersCache.getId(REPAIR_BUILDINGS).count() > 2).isNotAcceptable()
+        (it.myUnhealthyBuildings.isEmpty()).isNotAcceptable().run {
+            it.canceldOrder(REPAIR_BUILDINGS_ALL)
+        }
     }
+
+
 }
 
 
