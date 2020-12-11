@@ -18,13 +18,13 @@ class StrategicContext() {
 
     fun Boolean.isGood() {
         if (this) {
-            reward = 0.2 * Random.nextDouble() + 0.8
+            reward = 0.2 * Random.nextDouble() + 0.7
         }
     }
 
     fun Boolean.isAlwaysNeeded() {
         if (this) {
-            reward = 1.0
+            reward = 0.15 * Random.nextDouble() + 0.85
         }
     }
 
