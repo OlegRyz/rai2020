@@ -197,12 +197,13 @@ val REPAIR_BUILDINGS = MetaAction("REPAIR_BUILDINGS") { state ->
 
 val REPAIR_BUILDINGS_ALL = MetaAction("REPAIR_BUILDINGS_ALL") { state ->
     val buildingsNumber =  state.myUnhealthyBuildings.count()
+    val portion = (state.myBuilders.size / 2).coerceAtMost(buildingsNumber * 3) / buildingsNumber
     if (buildingsNumber > 0) {
         state
             .myUnhealthyBuildings
             .sortedBy { it.health }
             .foldIndexed(mutableMapOf()) { i, acc, building ->
-                val portion = (state.myBuilders.size / 2) / buildingsNumber
+
                 state.myBuilders
                     .sortedBy { distance(it.position, building.position) }
                     .take(portion * (buildingsNumber - i))
