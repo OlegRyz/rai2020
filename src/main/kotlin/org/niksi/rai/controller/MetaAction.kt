@@ -33,6 +33,15 @@ val ATTACK_ENEMY = MetaAction("ATTACK_ENEMY") {
     }
 }
 
+val ATTACK_NEIGHBOR = MetaAction("ATTACK_NEIGHBOR") {
+    val target = Vec2Int(5, globalSettings.mapSize - 25)
+    val portion = it.myFreeInfantry.count() / 2
+    it.myFreeInfantry
+        .sortedBy { warrior -> distance(warrior.position, target) }
+        .take(portion)
+        .move(target)
+}
+
 val CLEANUP_ORDERS = MetaAction("CLEANUP_ORDERS") {
     val attackers = it.myEntityBy(it.ordersCache.getId(ATTACK_ENEMY))
     attackers.near(it.enemies, 20).run {
@@ -94,7 +103,6 @@ val BUILD_BASE_RANGED = MetaAction("BUILD_BASE_RANGED") {
 
 val BUILD_UNIT_MELEE = MetaAction("BUILD_UNIT_MELEE") {
     it.myBuilderBase?.stopProduction()
-    it.myRangedBase?.stopProduction()
     it.myMeleeBase?.produce(it, EntityType.MELEE_UNIT)
 }
 
@@ -131,7 +139,6 @@ fun Entity.stopProduction() = mutableMapOf(
 
 val BUILD_UNIT_RANGED = MetaAction("BUILD_UNIT_RANGED") {
     it.myBuilderBase?.stopProduction()
-    it.myMeleeBase?.stopProduction()
     it.myRangedBase?.produce(it, EntityType.RANGED_UNIT)
 }
 

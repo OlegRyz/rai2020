@@ -20,7 +20,7 @@ val Balanced = StrategicDsl {
     UNLEASH_MAD_PRINTER.rule("Unleash mad printer") {
         val isStopperHere = it.ordersCache.getId(STOP_MAD_PRINTER).any()
         (!isStopperHere).isNotAcceptable()
-        (isStopperHere && (it.myInfantry.count() / it.myBuilders.count()) > 2)
+        (isStopperHere && (it.myInfantry.count() > 2 * it.myBuilders.count()))
             .isAlwaysNeeded()
         (isStopperHere && it.myBuilders.count() < 4)
             .isAlwaysNeeded()
@@ -55,6 +55,13 @@ val Balanced = StrategicDsl {
         (it.myInfantry.count() < it.enemyInfantry.count() + 5)
             .alsoCancelOrder(ATTACK_ENEMY).isNotAcceptable()
         (it.enemyInfantry.any { enemy -> it.my.any { distance(enemy.position, it.position) < 13 } }).isAlwaysNeeded()
+    }
+
+    ATTACK_NEIGHBOR.rule("") {
+        true.isBad()
+        (2*it.ordersCache.getId(ATTACK_NEIGHBOR).count() < it.myInfantry.count()).isGood()
+        (it.myInfantry.count() < 9).isBad()
+
     }
 
     DEFEND_BUILDINGS.rule("") {
