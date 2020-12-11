@@ -8,7 +8,7 @@ val Balanced = StrategicDsl {
     BUILD_UNIT_BUILDER.rule("Builders are Limited") {
         (it.myBuilders.count() > 0).isGood()
         (it.myBuilders.count() > 5).isBad()
-        (it.myBuilders.count() > 5 && it.myInfantry.count() < 5).isNotAcceptable()
+        (it.myBuilders.count() > 5 && 2*it.myInfantry.count() < it.myBuilders.count()).isNotAcceptable()
     }
 
     STOP_MAD_PRINTER.rule("Stop mad printer") {
@@ -31,6 +31,7 @@ val Balanced = StrategicDsl {
         (it.myBuilders.count() < 5).isBad()
         (it.myMelee.count() > 0).isGood()
         (it.myBuilders.count() > 4).isGood()
+        (it.myBuilders.count() > 5 && 2*it.myInfantry.count() < it.myBuilders.count()).isAlwaysNeeded()
     }
 
     BUILD_UNIT_RANGED.rule("Builders are Limited") {

@@ -11,10 +11,18 @@ val DO_NOTHING = MetaAction("DO_NOTHING") {
 val COLLECT_RESOURCES = MetaAction("COLLECT_RESOURCES") {
     it.myFreeBuilders.run {
         collect(it)
-    }.also { res ->
-        it.myTurrets.act { EntityAction(null,null, AttackAction(null, AutoAttack(50, arrayOf(
-            EntityType.BUILDER_UNIT, EntityType.MELEE_UNIT, EntityType.RANGED_UNIT))), null
-        ) }
+    }
+}
+
+val ACTIVATE_TURRETS = MetaAction("Activate") {
+    it.myTurrets.act {
+        EntityAction(
+            null, null, AttackAction(null, AutoAttack(50, arrayOf(
+                        EntityType.BUILDER_UNIT, EntityType.MELEE_UNIT, EntityType.RANGED_UNIT
+                    )
+                )
+            ), null
+        )
     }
 }
 
@@ -36,12 +44,24 @@ val CLEANUP_ORDERS = MetaAction("CLEANUP_ORDERS") {
     }
 }
 
+val CLEANUP_GATE = MetaAction("CLEANUP_GATE") {
+    val gate = it.myRangedBase?.gatePosition(it)
+    if (gate == null) {
+        mutableMapOf()
+    } else {
+        it.myInfantry.firstOrNull { warior -> warior.position.isSame(gate) }?.move(Vec2Int(18, 18))
+    }
+}
+
+private fun Vec2Int.isSame(position: Vec2Int) = this.x == position.x && this.y == position.y
+
+
 val DEFEND_BUILDINGS = MetaAction("DEFEND_BUILDINGS") {
     val targets = it.enemyInfantry.near(it.myBuildings, 20)
     if (targets.isEmpty()) {
         mutableMapOf()
     } else {
-        it.myInfantry.near(it.myBuildings, 150).attackClosestToYou(it, targets)
+        it.myInfantry.near(it.myBuildings, 150).attackClosestToClosestDefendable(it, targets, it.myBuildings)
     }
 }
 
@@ -54,7 +74,7 @@ fun List<Entity>.near(targets: List<Entity>, range: Int) =
 
 
 val GEATHER_ARMY = MetaAction("GEATHER_ARMY") {
-    it.myFreeInfantry.move(Vec2Int(21,21))
+    it.myFreeInfantry.move(Vec2Int(18,18))
 }
 
 fun Pair<Vec2Int, Vec2Int>.transit(share: Double) = Vec2Int(
@@ -63,14 +83,12 @@ fun Pair<Vec2Int, Vec2Int>.transit(share: Double) = Vec2Int(
 )
 
 val BUILD_UNIT_BUILDER = MetaAction("BUILD_UNIT_BUILDER") {
-    it.myMeleeBase?.stopProduction()
-    it.myRangedBase?.stopProduction()
     it.myBuilderBase?.produce(it, EntityType.BUILDER_UNIT)
 }
 
 val BUILD_BASE_RANGED = MetaAction("BUILD_BASE_RANGED") {
     val position = Vec2Int(0, 0)
-    it.myBuilders.closest(position)?.produce(it, EntityType.MELEE_BASE, position) ?: mutableMapOf()
+    it.myBuilders.closest(position)?.produce(it, EntityType.RANGED_BASE, position) ?: mutableMapOf()
 }
 
 
@@ -104,7 +122,7 @@ private fun Entity.gatePosition(fieldState: FieldState): Vec2Int {
 fun Entity.stopProduction() = mutableMapOf(
     id to EntityAction(
         null,
-        BuildAction(EntityType.BUILDER_UNIT, Vec2Int(0,0)),
+        null,
         null,
         null
     )
@@ -306,10 +324,31 @@ private fun Vec2Int.limitToMap() = Vec2Int(
     y.coerceIn(0..globalSettings.mapSize)
 )
 
-fun List<Entity>.closest(position: Vec2Int) = minByOrNull { manhDistance(it.position, position) }
+fun List<Entity>.closest(position: Vec2Int?) = if (position != null) {
+    minByOrNull { manhDistance(it.position, position) }
+} else {
+    null
+}
 
 private fun List<Entity>.attackClosestToYou(fieldState: FieldState, targets: List<Entity>) = act {
     val closest = targets.closest(it.position)
+    when (closest) {
+        null -> EntityAction(null, null, null, null)
+        else -> {
+            val distance = fieldState.properties(it.entityType).attack?.attackRange ?: 0
+            val position = (closest.position to it.position).transitToDistance(distance)
+            EntityAction(
+                MoveAction(position, true, true),
+                null,
+                AttackAction(closest.id, null),
+                null
+            )
+        }
+    }
+}
+
+private fun List<Entity>.attackClosestToClosestDefendable(fieldState: FieldState, targets: List<Entity>, defendable: List<Entity>) = act {
+    val closest = targets.closest(defendable.closest(it.position)?.position)
     when (closest) {
         null -> EntityAction(null, null, null, null)
         else -> {
