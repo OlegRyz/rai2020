@@ -140,7 +140,15 @@ val BUILD_HOUSE = MetaAction("BUILD_HOUSE") {
 
 private fun Vec2Int.toStr() = "($x , $y)"
 
-val SpotChoice = listOf(List(7){it -> Vec2Int(0,it * 3)}, List(7){it -> Vec2Int(it * 3, 0)}).flatten()
+val SpotChoice = listOf(
+    List(10){it -> Vec2Int(0,it * 3)},
+    List(9){it -> Vec2Int(it * 3 + 4, 0)},
+    List(9){it -> Vec2Int(it * 4 + 4, 11)},
+    listOf(Vec2Int(11,4),Vec2Int(11,7), Vec2Int(11, 19), Vec2Int(11, 15)),
+    List(7){it -> Vec2Int(it * 5 + 5, 24)},
+    List(7){it -> Vec2Int(24,it * 5 + 5)},
+).flatten()
+
 private fun findEmptySpot(spotSize: Int, state: FieldState): Vec2Int? {
     return SpotChoice.firstOrNull { available(it, state, spotSize) }
 }
