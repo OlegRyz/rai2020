@@ -2,6 +2,7 @@ package org.niksi.rai.controller
 
 import model.*
 import kotlin.math.abs
+import kotlin.math.sign
 import kotlin.random.Random
 
 val DO_NOTHING = MetaAction("DO_NOTHING") {
@@ -40,6 +41,22 @@ val ATTACK_NEIGHBOR = MetaAction("ATTACK_NEIGHBOR") {
         .sortedBy { warrior -> distance(warrior.position, target) }
         .take(portion)
         .move(target)
+}
+
+val RUN_AWAY_BUILDERS = MetaAction("RUN_AWAY_BUILDERS") {
+    it.myBuilders.near(it.enemies, 6).act { surrender ->
+        val closest = it.enemyInfantry.closest(surrender.position)
+        if  (closest != null) {
+            surrender.moveAsap(
+                Vec2Int(
+                    (surrender.position.x + (surrender.position.x - closest.position.x).sign),
+                    surrender.position.y + (surrender.position.y - closest.position.y).sign
+                )
+            )
+        } else {
+            EntityAction()
+        }
+    }
 }
 
 val CLEANUP_ORDERS = MetaAction("CLEANUP_ORDERS") {
@@ -139,6 +156,7 @@ fun Entity.stopProduction() = mutableMapOf(
 
 val BUILD_UNIT_RANGED = MetaAction("BUILD_UNIT_RANGED") {
     it.myBuilderBase?.stopProduction()
+    it.myMeleeBase?.stopProduction()
     it.myRangedBase?.produce(it, EntityType.RANGED_UNIT)
 }
 
@@ -279,7 +297,7 @@ private fun Entity.repair(state: FieldState, entities: List<Entity>) = mutableMa
         else -> {
             println("RPEAIR: ${closest.position.toStr()} ${closest.id}")
             EntityAction(
-                MoveAction(closest.position, true, true),
+                MoveAction(closest.position.coerce(globalSettings.mapSize), true, true),
                 null,
                 null,
                 RepairAction(closest.id)
@@ -314,7 +332,7 @@ fun Int.build(
     return mutableMapOf(
         this to EntityAction(
             MoveAction(position.limitToMap(), false, true),
-            BuildAction(type, Vec2Int(position.x - size, position.y - size + 1)),
+            BuildAction(type, Vec2Int(position.x - size, position.y - size + 1).coerce(globalSettings.mapSize)),
             null,
             null
         )
@@ -343,9 +361,12 @@ private fun List<Entity>.attackClosestToYou(fieldState: FieldState, targets: Lis
         null -> EntityAction(null, null, null, null)
         else -> {
             val distance = fieldState.properties(it.entityType).attack?.attackRange ?: 0
-            val position = (closest.position to it.position).transitToDistance(distance)
+            var position = (closest.position to it.position).transitToDistance(distance)
+            if (fieldState.myInfantry.any { it.position.isSame(position) }) {
+                position = position.randomShift(1,1)
+            }
             EntityAction(
-                MoveAction(position, true, true),
+                MoveAction(position.coerce(globalSettings.mapSize), true, true),
                 null,
                 AttackAction(closest.id, null),
                 null
@@ -362,7 +383,7 @@ private fun List<Entity>.attackClosestToClosestDefendable(fieldState: FieldState
             val distance = fieldState.properties(it.entityType).attack?.attackRange ?: 0
             val position = (closest.position to it.position).transitToDistance(distance)
             EntityAction(
-                MoveAction(position, true, true),
+                MoveAction(position.coerce(globalSettings.mapSize), true, true),
                 null,
                 AttackAction(closest.id, null),
                 null
@@ -385,23 +406,33 @@ private fun Pair<Vec2Int, Vec2Int>.transitToDistance(expDistance: Int):Vec2Int {
 
 private fun List<Entity>.move(point: Vec2Int) = act {
     EntityAction(
-        MoveAction(point, true, true),
+        MoveAction(point.coerce(globalSettings.mapSize), true, true),
         null,
         AttackAction(null, AutoAttack(10, arrayOf(EntityType.MELEE_UNIT, EntityType.RANGED_UNIT))),
         null)
 }
 
+private fun Vec2Int.coerce(mapSize: Int): Vec2Int = Vec2Int(this.x.coerceIn(0..mapSize), this.y.coerceIn(0..mapSize))
+
 private fun Entity.move(point: Vec2Int?) = mutableMapOf(
     id to when (point) {
         null -> EntityAction()
         else -> EntityAction(
-            MoveAction(point, true, true),
+            MoveAction(point.coerce(globalSettings.mapSize), true, true),
             null,
             AttackAction(null, AutoAttack(10, arrayOf(EntityType.MELEE_UNIT, EntityType.RANGED_UNIT))),
             null
         )
     }
 )
+
+private fun Entity.moveAsap(point: Vec2Int) =  EntityAction(
+            MoveAction(point.coerce(globalSettings.mapSize), false, false),
+            null,
+            null,
+    null
+        )
+
 
 fun List<Entity>.middlePoint(): Vec2Int {
     val x = this.map { it.position.x }.average()
@@ -429,7 +460,7 @@ private fun Entity.produce(
     return mutableMapOf(
         id to EntityAction(
             null,
-            BuildAction(type, gatePosition),
+            BuildAction(type, gatePosition.coerce(globalSettings.mapSize)),
             null,
             null
         )
@@ -443,7 +474,7 @@ private fun List<Entity>.collect(fieldState: FieldState) = act {
     when (val closest = target?.position) {
         null -> EntityAction(null, null, null, null)
         else -> EntityAction(
-            MoveAction(closest, true, true),
+            MoveAction(closest.coerce(globalSettings.mapSize), true, true),
             null,
             AttackAction(null, AutoAttack(10, arrayOf(EntityType.RESOURCE))),
             null
