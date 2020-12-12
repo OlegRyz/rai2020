@@ -120,7 +120,20 @@ fun Pair<Vec2Int, Vec2Int>.transit(share: Double) = Vec2Int(
 )
 
 val BUILD_UNIT_BUILDER = MetaAction("BUILD_UNIT_BUILDER") {
-    it.myBuilderBase?.produce(it, EntityType.BUILDER_UNIT)
+    if (it.me.resource >= it.properties(EntityType.BUILDER_UNIT).initialCost) {
+        println("build builder")
+        it.myBuilderBase?.produce(it, EntityType.BUILDER_UNIT)
+    } else {
+        println("not enough resource to build builder ${it.me.resource}")
+        useOtherwiseAction(it)
+    }
+}.doAlwaysWhenNotChosen {
+    if (it.myBuilderBase != null) {
+        mutableMapOf(it.myBuilderBase.id to
+                EntityAction(null, null, null, null))
+    } else {
+        mutableMapOf()
+    }
 }
 
 val BUILD_BASE_RANGED = MetaAction("BUILD_BASE_RANGED") {
@@ -130,8 +143,18 @@ val BUILD_BASE_RANGED = MetaAction("BUILD_BASE_RANGED") {
 
 
 val BUILD_UNIT_MELEE = MetaAction("BUILD_UNIT_MELEE") {
-    it.myBuilderBase?.stopProduction()
-    it.myMeleeBase?.produce(it, EntityType.MELEE_UNIT)
+    if (it.me.resource >= it.properties(EntityType.MELEE_UNIT).initialCost) {
+        it.myMeleeBase?.produce(it, EntityType.MELEE_UNIT)
+    } else {
+        useOtherwiseAction(it)
+    }
+}.doAlwaysWhenNotChosen {
+    if (it.myMeleeBase != null) {
+        mutableMapOf(it.myMeleeBase.id to
+                EntityAction(null, null, null, null))
+    } else {
+        mutableMapOf()
+    }
 }
 
 val STOP_MAD_PRINTER = MetaAction("STOP_MAD_PRINTER") {
@@ -166,9 +189,20 @@ fun Entity.stopProduction() = mutableMapOf(
 
 
 val BUILD_UNIT_RANGED = MetaAction("BUILD_UNIT_RANGED") {
-    it.myBuilderBase?.stopProduction()
-    it.myMeleeBase?.stopProduction()
-    it.myRangedBase?.produce(it, EntityType.RANGED_UNIT)
+    if (it.me.resource >= it.properties(EntityType.RANGED_UNIT).initialCost) {
+        println("build ranged")
+        it.myRangedBase?.produce(it, EntityType.RANGED_UNIT)
+    } else {
+        println("not enough resource to build ranged ${it.me.resource}")
+        useOtherwiseAction(it)
+    }
+}.doAlwaysWhenNotChosen {
+    if (it.myRangedBase != null) {
+        mutableMapOf(it.myRangedBase.id to
+                EntityAction(null, null, null, null))
+    } else {
+        mutableMapOf()
+    }
 }
 
 val BUILD_HOUSE = MetaAction("BUILD_HOUSE") {
@@ -498,9 +532,23 @@ fun List<Entity>.allInRadius(radius:Int, center: Vec2Int) = filter { distance(it
 fun List<Entity>.randomInRadius(radius:Int, center: Vec2Int) = allInRadius(radius, center).randomOrNull()
 
 class MetaAction(val name: String = "", val decoder: MetaAction.(FieldState) -> MutableMap<Int, EntityAction>?) {
+    var opposite: MetaAction? = null
     fun DecodeToAction(state: FieldState) = decoder(state) ?: mutableMapOf()
 
 
     override fun toString() = name
     fun isSame(metaAction: MetaAction) = name == metaAction.name
+    fun doAlwaysWhenNotChosen(decoder: MetaAction.(FieldState) -> MutableMap<Int, EntityAction>?): MetaAction {
+        opposite = MetaAction("NOT_TO_$name", decoder)
+        return this
+    }
+
+    fun useOtherwiseAction(state: FieldState): MutableMap<Int, EntityAction>? {
+        val action = opposite
+        return if (action != null) {
+            action.decoder(action, state)
+        } else {
+            mutableMapOf()
+        }
+    }
 }
