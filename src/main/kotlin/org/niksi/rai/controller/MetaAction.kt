@@ -157,20 +157,6 @@ val BUILD_UNIT_MELEE = MetaAction("BUILD_UNIT_MELEE") {
     }
 }
 
-val STOP_MAD_PRINTER = MetaAction("STOP_MAD_PRINTER") {
-    it.myInfantry.choose(it, this)?.run {
-        it.recordOrder(this, this@MetaAction)
-        move(it.myBuilderBase?.gatePosition(it))
-    }
-}
-
-val UNLEASH_MAD_PRINTER = MetaAction("UNLEASH_MAD_PRINTER") {
-    it.myInfantry.choose(it, STOP_MAD_PRINTER)?.run {
-        it.canceldOrder(this)
-        move(this.position.shift(2,2))
-    }
-}
-
 private fun Vec2Int.shift(x: Int, y: Int) = Vec2Int(this.x + x, this.y + y)
 
 private fun Entity.gatePosition(fieldState: FieldState): Vec2Int {
