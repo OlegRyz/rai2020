@@ -2,6 +2,7 @@ package org.niksi.rai.controller
 
 import model.*
 import kotlin.math.abs
+import kotlin.math.roundToInt
 import kotlin.math.sign
 import kotlin.random.Random
 
@@ -392,15 +393,14 @@ private fun List<Entity>.attackClosestToClosestDefendable(fieldState: FieldState
     }
 }
 
-private fun Pair<Vec2Int, Vec2Int>.transitToDistance(expDistance: Int):Vec2Int {
+fun Pair<Vec2Int, Vec2Int>.transitToDistance(expDistance: Int):Vec2Int {
     val curDistance = distance(first, second)
     return if (curDistance == 0) {
         Vec2Int(first.x, first.y + expDistance)
     } else {
-        val dx = expDistance * (second.x - first.x) / curDistance
-        val dy = expDistance * (second.y - first.y) / curDistance
-
-        Vec2Int((first.x + dx).toInt(), (first.y + dy).toInt())
+        val dx = (expDistance * (second.x - first.x)).toFloat() / curDistance
+        val dy = (expDistance * (second.y - first.y)).toFloat() / curDistance
+        Vec2Int((first.x + dx).roundToInt(), (first.y + dy).roundToInt())
     }
 }
 
