@@ -45,7 +45,7 @@ val ATTACK_NEIGHBOR = MetaAction("ATTACK_NEIGHBOR") {
 }
 
 val RUN_AWAY_BUILDERS = MetaAction("RUN_AWAY_BUILDERS") {
-    it.myBuilders.near(it.enemies, 6).act { surrender ->
+    it.myBuilders.near(it.enemies, 8).act { surrender ->
         val closest = it.enemyInfantry.closest(surrender.position)
         if  (closest != null) {
             surrender.moveAsap(
