@@ -1,13 +1,14 @@
 package org.niksi.rai.strategies
 
 import model.Entity
+import model.EntityType
 import org.niksi.rai.controller.*
 
 val Balanced = StrategicDsl {
     BUILD_UNIT_BUILDER.rule("Builders are Limited") {
         (it.myBuilders.count() > 0).isGood()
         (it.myBuilders.count() > 5).isBad()
-        (it.myBuilders.count() > 5 && it.myInfantry.count() < 5).isNotAcceptable()
+        (it.myBuilders.count() > 5 && 2*it.myInfantry.count() < it.myBuilders.count()).isNotAcceptable()
     }
 
     STOP_MAD_PRINTER.rule("Stop mad printer") {
@@ -19,7 +20,7 @@ val Balanced = StrategicDsl {
     UNLEASH_MAD_PRINTER.rule("Unleash mad printer") {
         val isStopperHere = it.ordersCache.getId(STOP_MAD_PRINTER).any()
         (!isStopperHere).isNotAcceptable()
-        (isStopperHere && (it.myInfantry.count() / it.myBuilders.count()) > 2)
+        (isStopperHere && (it.myInfantry.count() > 2 * it.myBuilders.count()))
             .isAlwaysNeeded()
         (isStopperHere && it.myBuilders.count() < 4)
             .isAlwaysNeeded()
@@ -28,8 +29,9 @@ val Balanced = StrategicDsl {
 
     BUILD_UNIT_MELEE.rule("Builders are Limited") {
         (it.myBuilders.count() < 5).isBad()
-        (it.myMelee.count() > 0).isGood()
-        (it.myBuilders.count() > 4).isGood()
+        (it.myMelee.count() > 0).isBad()
+        (it.myBuilders.count() > 4).isBad()
+        (it.myBuilders.count() > 5 && 2*it.myInfantry.count() < it.myBuilders.count()).isAlwaysNeeded()
     }
 
     BUILD_UNIT_RANGED.rule("Builders are Limited") {
@@ -50,8 +52,21 @@ val Balanced = StrategicDsl {
 
     ATTACK_ENEMY.rule("") {
         (it.myInfantry.count() > it.enemyInfantry.count() + 5).isGood()
-        (it.myInfantry.count() < it.enemyInfantry.count()).isNotAcceptable()
+        (it.myInfantry.count() < it.enemyInfantry.count() + 5)
+            .alsoCancelOrder(ATTACK_ENEMY).isNotAcceptable()
         (it.enemyInfantry.any { enemy -> it.my.any { distance(enemy.position, it.position) < 13 } }).isAlwaysNeeded()
+    }
+
+    ATTACK_NEIGHBOR.rule("") {
+        true.isBad()
+        (2*it.ordersCache.getId(ATTACK_NEIGHBOR).count() < it.myInfantry.count()).isGood()
+        (it.myInfantry.count() < 9).isBad()
+
+    }
+
+    DEFEND_BUILDINGS.rule("") {
+        true.isNotAcceptable()
+        (it.enemies.near(it.myBuildings, 20).any()).isAlwaysNeeded()
     }
 
     GEATHER_ARMY.rule("") {
@@ -59,15 +74,23 @@ val Balanced = StrategicDsl {
     }
 
     BUILD_HOUSE.rule("Build a house if food is low") {
-        (it.myPopulationLimit - it.myPopulation < 3
-                && !it.myUnhealthyBuildings.any()).isGood()
-        (it.myPopulationLimit - it.myPopulation > 5).isNotAcceptable()
+        true.isGood()
+        (it.myPopulationLimit - it.myPopulation < 3).isAlwaysNeeded()
+        (it.myPopulation == 0 || it.myPopulationLimit > 2 * it.myPopulation).isNotAcceptable()
+        (it.me.resource < it.properties(EntityType.HOUSE).initialCost + it.myFreeBuilders.count()).isNotAcceptable()
+        (it.ordersCache.getId(BUILD_HOUSE).count() > 1).isNotAcceptable()
+        if (it.myBuildings.any{!it.active}) {
+            it.canceldOrder(BUILD_HOUSE)
+        }
     }
 
-    REPAIR_BUILDINGS.rule("") {
+    REPAIR_BUILDINGS_ALL.rule("") {
         (it.myUnhealthyBuildings.any()).isAlwaysNeeded()
-        (!it.myUnhealthyBuildings.any() || it.ordersCache.getId(REPAIR_BUILDINGS).count() > 2).isNotAcceptable()
+        (it.myUnhealthyBuildings.isEmpty())
+            .alsoCancelOrder(REPAIR_BUILDINGS_ALL).isNotAcceptable()
     }
+
+
 }
 
 
