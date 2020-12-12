@@ -1,3 +1,4 @@
+import org.niksi.rai.controller.runTests
 import java.io.BufferedInputStream
 import java.io.BufferedOutputStream
 import java.io.IOException
@@ -48,6 +49,7 @@ internal constructor(host: String, port: Int, token: String, val debug: Boolean 
             val port = if (args.size < 2) 31001 else Integer.parseInt(args[1])
             val token = if (args.size < 3) "0000000000000000" else args[2]
             val debug = args.size >= 4
+            if (debug) runTests()
             Runner(host, port, token, debug).run()
         }
     }
