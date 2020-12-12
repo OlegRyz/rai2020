@@ -7,7 +7,7 @@ import java.net.Socket
 import util.StreamUtil
 
 class Runner @Throws(IOException::class)
-internal constructor(host: String, port: Int, token: String) {
+internal constructor(host: String, port: Int, token: String, val debug: Boolean = false) {
     private val inputStream: InputStream
     private val outputStream: OutputStream
 
@@ -27,7 +27,7 @@ internal constructor(host: String, port: Int, token: String) {
         while (true) {
             val message = model.ServerMessage.readFrom(inputStream)
             if (message is model.ServerMessage.GetAction) {
-                model.ClientMessage.ActionMessage(myStrategy.getAction(message.playerView, if (message.debugAvailable) debugInterface else null)).writeTo(outputStream)
+                model.ClientMessage.ActionMessage(myStrategy.getAction(message.playerView, if (message.debugAvailable) debugInterface else null, debug)).writeTo(outputStream)
                 outputStream.flush()
             } else if (message is model.ServerMessage.Finish) {
                 break
@@ -47,7 +47,8 @@ internal constructor(host: String, port: Int, token: String) {
             val host = if (args.size < 1) "127.0.0.1" else args[0]
             val port = if (args.size < 2) 31001 else Integer.parseInt(args[1])
             val token = if (args.size < 3) "0000000000000000" else args[2]
-            Runner(host, port, token).run()
+            val debug = args.size >= 4
+            Runner(host, port, token, debug).run()
         }
     }
 }
