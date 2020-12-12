@@ -1,6 +1,7 @@
 package org.niksi.rai.controller
 
 import model.*
+import org.niksi.rai.langpack.stopProduction
 import kotlin.math.abs
 import kotlin.math.roundToInt
 import kotlin.math.sign
@@ -128,12 +129,7 @@ val BUILD_UNIT_BUILDER = MetaAction("BUILD_UNIT_BUILDER") {
         useOtherwiseAction(it)
     }
 }.doAlwaysWhenNotChosen {
-    if (it.myBuilderBase != null) {
-        mutableMapOf(it.myBuilderBase.id to
-                EntityAction(null, null, null, null))
-    } else {
-        mutableMapOf()
-    }
+    it.myBuilderBase.stopProduction()
 }
 
 val BUILD_BASE_RANGED = MetaAction("BUILD_BASE_RANGED") {
@@ -149,12 +145,7 @@ val BUILD_UNIT_MELEE = MetaAction("BUILD_UNIT_MELEE") {
         useOtherwiseAction(it)
     }
 }.doAlwaysWhenNotChosen {
-    if (it.myMeleeBase != null) {
-        mutableMapOf(it.myMeleeBase.id to
-                EntityAction(null, null, null, null))
-    } else {
-        mutableMapOf()
-    }
+    it.myMeleeBase.stopProduction()
 }
 
 private fun Vec2Int.shift(x: Int, y: Int) = Vec2Int(this.x + x, this.y + y)
@@ -163,16 +154,6 @@ private fun Entity.gatePosition(fieldState: FieldState): Vec2Int {
     val size = fieldState.properties(this.entityType).size
     return Vec2Int(position.x + size, position.y + size - 1)
 }
-
-fun Entity.stopProduction() = mutableMapOf(
-    id to EntityAction(
-        null,
-        null,
-        null,
-        null
-    )
-)
-
 
 val BUILD_UNIT_RANGED = MetaAction("BUILD_UNIT_RANGED") {
     if (it.me.resource >= it.properties(EntityType.RANGED_UNIT).initialCost) {
@@ -183,12 +164,7 @@ val BUILD_UNIT_RANGED = MetaAction("BUILD_UNIT_RANGED") {
         useOtherwiseAction(it)
     }
 }.doAlwaysWhenNotChosen {
-    if (it.myRangedBase != null) {
-        mutableMapOf(it.myRangedBase.id to
-                EntityAction(null, null, null, null))
-    } else {
-        mutableMapOf()
-    }
+    it.myRangedBase.stopProduction()
 }
 
 val BUILD_HOUSE = MetaAction("BUILD_HOUSE") {
