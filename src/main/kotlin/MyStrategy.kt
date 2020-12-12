@@ -3,6 +3,9 @@ import org.niksi.rai.controller.Controller
 import org.niksi.rai.controller.checkConsistency
 
 class MyStrategy {
+    val version = "1.0.2".also {
+        println("Version $it")
+    }
     var controller: Controller? = null
     fun getAction(playerView: PlayerView, debugInterface: DebugInterface?, debug: Boolean = false) = with(playerView) {
         try {
