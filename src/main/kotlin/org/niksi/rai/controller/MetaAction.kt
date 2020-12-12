@@ -60,6 +60,16 @@ val RUN_AWAY_BUILDERS = MetaAction("RUN_AWAY_BUILDERS") {
     }
 }
 
+val RETREAT_RANGED_UNITS = MetaAction("RUN_AWAY_BUILDERS") {
+    it.myRanged.near(it.enemies, 8).act { surrender ->
+        val closeEnemy = it.enemyInfantry.allInRadius(10, surrender.position)
+        val closeMy = it.myInfantry.allInRadius(10, surrender.position)
+        //closeEnemy.sumBy { it.health } < closeMy
+
+        EntityAction()
+    }
+}
+
 val CLEANUP_ORDERS = MetaAction("CLEANUP_ORDERS") {
     val attackers = it.myEntityBy(it.ordersCache.getId(ATTACK_ENEMY))
     attackers.near(it.enemies, 20).run {
