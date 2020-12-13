@@ -6,32 +6,21 @@ import org.niksi.rai.controller.*
 
 val Balanced = StrategicDsl {
     BUILD_UNIT_BUILDER.rule("Builders are Limited") {
-        (it.myBuilders.count() > 0).isGood()
-        (it.myBuilders.count() > 5).isBad()
-        (it.myBuilders.count() > 5 && 2*it.myInfantry.count() < it.myBuilders.count()).isNotAcceptable()
-    }
-
-    STOP_MAD_PRINTER.rule("Stop mad printer") {
-        true.isNotAcceptable()
-        (it.myBuilders.count() > 3 && it.myInfantry.count() < 5 && it.ordersCache.getId(STOP_MAD_PRINTER).isEmpty())
-            .isAlwaysNeeded()
-    }
-
-    UNLEASH_MAD_PRINTER.rule("Unleash mad printer") {
-        val isStopperHere = it.ordersCache.getId(STOP_MAD_PRINTER).any()
-        (!isStopperHere).isNotAcceptable()
-        (isStopperHere && (it.myInfantry.count() > 2 * it.myBuilders.count()))
-            .isAlwaysNeeded()
-        (isStopperHere && it.myBuilders.count() < 4)
-            .isAlwaysNeeded()
-        (isStopperHere && it.me.resource > 100).isAlwaysNeeded()
+        (it.myBuilders.count() > 0).isAlwaysNeeded()
+        (it.myBuilders.count() > 5).isGood()
     }
 
     BUILD_UNIT_MELEE.rule("Builders are Limited") {
         (it.myBuilders.count() < 5).isBad()
         (it.myMelee.count() > 0).isBad()
-        (it.myBuilders.count() > 4).isBad()
-        (it.myBuilders.count() > 5 && 2*it.myInfantry.count() < it.myBuilders.count()).isAlwaysNeeded()
+        (it.myBuilders.count() > 4).isGood()
+    }
+
+    (BUILD_UNIT_BUILDER to BUILD_UNIT_RANGED).pairedRule("") {
+        true.isNotAcceptable()
+        (it.myBuilders.count() > 8).isAlwaysNeeded()
+        val choice = (it.myInfantry.count() > 1.5 * it.myBuilders.count())
+        choice
     }
 
     BUILD_UNIT_RANGED.rule("Builders are Limited") {

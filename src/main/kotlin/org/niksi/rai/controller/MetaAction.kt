@@ -1,6 +1,7 @@
 package org.niksi.rai.controller
 
 import model.*
+import org.niksi.rai.langpack.stopProduction
 import kotlin.math.abs
 import kotlin.math.roundToInt
 import kotlin.math.sign
@@ -48,16 +49,36 @@ val RUN_AWAY_BUILDERS = MetaAction("RUN_AWAY_BUILDERS") {
     it.myBuilders.near(it.enemies, 8).act { surrender ->
         val closest = it.enemyInfantry.closest(surrender.position)
         if  (closest != null) {
-            surrender.moveAsap(
-                Vec2Int(
-                    (surrender.position.x + (surrender.position.x - closest.position.x).sign),
-                    surrender.position.y + (surrender.position.y - closest.position.y).sign
-                )
-            )
+            surrender.retreatFrom(closest)
         } else {
             EntityAction()
         }
     }
+}
+
+fun Entity.retreatFrom(enemy: Entity) = retreatFrom(enemy.position)
+fun Entity.retreatFrom(enemyPosition: Vec2Int) = moveAsap(
+    Vec2Int(
+        (this.position.x + (this.position.x - enemyPosition.x).sign),
+        this.position.y + (this.position.y - enemyPosition.y).sign
+    )
+)
+
+val RETREAT_RANGED_UNITS = MetaAction("RUN_AWAY_BUILDERS") {
+    it.myRanged
+        .near(it.enemies, 6)
+        .map { surrender ->
+            val closeEnemy = it.enemyInfantry.allInRadius(7, surrender.position)
+            val closeMy = it.myInfantry.allInRadius(7, surrender.position)
+            if (closeEnemy.sumBy { it.health } > closeMy.sumBy { it.health }) {
+                it.canceldOrder(surrender)
+                surrender.id to surrender.retreatFrom(closeEnemy.middlePoint())
+            } else {
+                surrender.id to surrender.attackClosestToYou(it, it.enemies)
+            }
+        }
+        .toMap()
+        .toMutableMap()
 }
 
 val CLEANUP_ORDERS = MetaAction("CLEANUP_ORDERS") {
@@ -110,7 +131,15 @@ fun Pair<Vec2Int, Vec2Int>.transit(share: Double) = Vec2Int(
 )
 
 val BUILD_UNIT_BUILDER = MetaAction("BUILD_UNIT_BUILDER") {
-    it.myBuilderBase?.produce(it, EntityType.BUILDER_UNIT)
+    if (it.me.resource >= it.properties(EntityType.BUILDER_UNIT).initialCost) {
+        println("build builder")
+        it.myBuilderBase?.produce(it, EntityType.BUILDER_UNIT)
+    } else {
+        println("not enough resource to build builder ${it.me.resource}")
+        useOtherwiseAction(it)
+    }
+}.doAlwaysWhenNotChosen {
+    it.myBuilderBase.stopProduction()
 }
 
 val BUILD_BASE_RANGED = MetaAction("BUILD_BASE_RANGED") {
@@ -120,22 +149,13 @@ val BUILD_BASE_RANGED = MetaAction("BUILD_BASE_RANGED") {
 
 
 val BUILD_UNIT_MELEE = MetaAction("BUILD_UNIT_MELEE") {
-    it.myBuilderBase?.stopProduction()
-    it.myMeleeBase?.produce(it, EntityType.MELEE_UNIT)
-}
-
-val STOP_MAD_PRINTER = MetaAction("STOP_MAD_PRINTER") {
-    it.myInfantry.choose(it, this)?.run {
-        it.recordOrder(this, this@MetaAction)
-        move(it.myBuilderBase?.gatePosition(it))
+    if (it.me.resource >= it.properties(EntityType.MELEE_UNIT).initialCost) {
+        it.myMeleeBase?.produce(it, EntityType.MELEE_UNIT)
+    } else {
+        useOtherwiseAction(it)
     }
-}
-
-val UNLEASH_MAD_PRINTER = MetaAction("UNLEASH_MAD_PRINTER") {
-    it.myInfantry.choose(it, STOP_MAD_PRINTER)?.run {
-        it.canceldOrder(this)
-        move(this.position.shift(2,2))
-    }
+}.doAlwaysWhenNotChosen {
+    it.myMeleeBase.stopProduction()
 }
 
 private fun Vec2Int.shift(x: Int, y: Int) = Vec2Int(this.x + x, this.y + y)
@@ -145,20 +165,16 @@ private fun Entity.gatePosition(fieldState: FieldState): Vec2Int {
     return Vec2Int(position.x + size, position.y + size - 1)
 }
 
-fun Entity.stopProduction() = mutableMapOf(
-    id to EntityAction(
-        null,
-        null,
-        null,
-        null
-    )
-)
-
-
 val BUILD_UNIT_RANGED = MetaAction("BUILD_UNIT_RANGED") {
-    it.myBuilderBase?.stopProduction()
-    it.myMeleeBase?.stopProduction()
-    it.myRangedBase?.produce(it, EntityType.RANGED_UNIT)
+    if (it.me.resource >= it.properties(EntityType.RANGED_UNIT).initialCost) {
+        println("build ranged")
+        it.myRangedBase?.produce(it, EntityType.RANGED_UNIT)
+    } else {
+        println("not enough resource to build ranged ${it.me.resource}")
+        useOtherwiseAction(it)
+    }
+}.doAlwaysWhenNotChosen {
+    it.myRangedBase.stopProduction()
 }
 
 val BUILD_HOUSE = MetaAction("BUILD_HOUSE") {
@@ -357,14 +373,18 @@ fun List<Entity>.closest(position: Vec2Int?) = if (position != null) {
 }
 
 private fun List<Entity>.attackClosestToYou(fieldState: FieldState, targets: List<Entity>) = act {
-    val closest = targets.closest(it.position)
-    when (closest) {
+    it.attackClosestToYou(fieldState, targets)
+}
+
+fun Entity.attackClosestToYou(fieldState: FieldState, targets: List<Entity>): EntityAction {
+    val closest = targets.closest(this.position)
+    return when (closest) {
         null -> EntityAction(null, null, null, null)
         else -> {
-            val distance = fieldState.properties(it.entityType).attack?.attackRange ?: 0
-            var position = (closest.position to it.position).transitToDistance(distance)
+            val distance = fieldState.properties(this.entityType).attack?.attackRange ?: 0
+            var position = (closest.position to this.position).transitToDistance(distance)
             if (fieldState.myInfantry.any { it.position.isSame(position) }) {
-                position = position.randomShift(1,1)
+                position = position.randomShift(1, 1)
             }
             EntityAction(
                 MoveAction(position.coerce(globalSettings.mapSize), true, true),
@@ -487,10 +507,24 @@ fun List<Entity>.allInRadius(radius:Int, center: Vec2Int) = filter { distance(it
 
 fun List<Entity>.randomInRadius(radius:Int, center: Vec2Int) = allInRadius(radius, center).randomOrNull()
 
-class MetaAction(val name: String = "", val decoder: MetaAction.(FieldState) -> MutableMap<Int, EntityAction>?) {
+data class MetaAction(val name: String = "", val decoder: MetaAction.(FieldState) -> MutableMap<Int, EntityAction>?) {
+    var opposite: MetaAction? = null
     fun DecodeToAction(state: FieldState) = decoder(state) ?: mutableMapOf()
 
 
     override fun toString() = name
     fun isSame(metaAction: MetaAction) = name == metaAction.name
+    fun doAlwaysWhenNotChosen(decoder: MetaAction.(FieldState) -> MutableMap<Int, EntityAction>?): MetaAction {
+        opposite = MetaAction("NOT_TO_$name", decoder)
+        return this
+    }
+
+    fun useOtherwiseAction(state: FieldState): MutableMap<Int, EntityAction>? {
+        val action = opposite
+        return if (action != null) {
+            action.decoder(action, state)
+        } else {
+            mutableMapOf()
+        }
+    }
 }

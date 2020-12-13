@@ -2,7 +2,7 @@ package org.niksi.rai.controller
 
 import kotlin.random.Random
 
-class StrategicContext(val state: ImaginaryState) {
+class RulesContext(val state: FieldState) {
     var reward = Random.nextDouble()
     fun Boolean.isRandom() {
         if (this) {
@@ -38,23 +38,56 @@ class StrategicContext(val state: ImaginaryState) {
 
     fun Boolean.alsoCancelOrder(metaAction: MetaAction): Boolean {
         if (this) {
-            state.fieldState.canceldOrder(metaAction)
+            state.canceldOrder(metaAction)
         }
         return this
     }
+}
 
-
-    val rulesMap = mutableMapOf<MetaAction, (FieldState) -> Unit>()
-    fun MetaAction.rule(name: String, function: (FieldState) -> Unit) {
-        rulesMap[this] = function
+class StrategicContext(val state: ImaginaryState) {
+    private val pairedRulesList =
+        mutableListOf<Pair<Pair<MetaAction, MetaAction>, RulesContext.(FieldState) -> Boolean>>()
+    private val rulesList = mutableListOf<Pair<MetaAction, RulesContext.(FieldState) -> Unit>>()
+    fun MetaAction.rule(name: String, function: RulesContext.(FieldState) -> Unit) {
+        rulesList.add(this to function)
     }
+
+    fun Pair<MetaAction, MetaAction>.pairedRule(name: String, function: RulesContext.(FieldState) -> Boolean) {
+        pairedRulesList.add(this to function)
+    }
+
+    fun calculatePairedRulesReward(metaAction: MetaAction, fieldState: FieldState) = rulesList
+        .filter { it.first == metaAction }
+        .map { (_, decoder) ->
+            RulesContext(fieldState).run {
+                decoder(this, fieldState)
+                reward
+            }
+        }
+        .maxByOrNull { it } ?: 0.0
+
+    fun calculateRulesReward(metaAction: MetaAction, fieldState: FieldState) = pairedRulesList
+        .filter { (pair, _) -> pair.first == metaAction || pair.second == metaAction }
+        .map { (pair, decoder) ->
+            RulesContext(fieldState).run {
+                val condition = decoder(this, fieldState)
+                if (metaAction == pair.first && condition ||
+                    metaAction == pair.second && !condition) {
+                    reward
+                } else {
+                    0.0
+                }
+            }
+        }
+        .maxByOrNull { it } ?: 0.0
 }
 
 class StrategicDsl(val definititon: StrategicContext.() -> Unit) {
 
     fun calculate(state: ImaginaryState): Double = StrategicContext(state).run {
         definititon()
-        rulesMap[state.metaAction]?.invoke(state.fieldState)
-        return reward
+        val rullesReward = this.calculateRulesReward(state.metaAction, state.fieldState)
+        val pairedRulesReward = this.calculatePairedRulesReward(state.metaAction, state.fieldState)
+        return maxOf(rullesReward, pairedRulesReward)
     }
 }

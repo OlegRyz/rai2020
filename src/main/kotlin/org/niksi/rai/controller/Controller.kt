@@ -45,17 +45,24 @@ class Controller(
     }
 
     private fun thoughtfulActions(): Iterable<MetaAction> = listOf(
-        DO_NOTHING, COLLECT_RESOURCES, ATTACK_ENEMY, BUILD_UNIT_BUILDER, BUILD_UNIT_RANGED,
-        BUILD_HOUSE, REPAIR_BUILDINGS_ALL,
-        DEFEND_BUILDINGS, ATTACK_NEIGHBOR)
+        DO_NOTHING, COLLECT_RESOURCES, ATTACK_ENEMY, BUILD_UNIT_BUILDER, BUILD_UNIT_RANGED, BUILD_UNIT_MELEE,
+        BUILD_HOUSE, REPAIR_BUILDINGS_ALL, DEFEND_BUILDINGS, ATTACK_NEIGHBOR)
 
-    fun Iterable<MetaAction>.takeBest(state: FieldState) = sortedBy { predictor.predict(it, state) }.takeLast(2)
+    fun Iterable<MetaAction>.takeBest(state: FieldState) =
+        sortedByDescending { predictor.predict(it, state) }
+        .mapIndexed { i, item ->
+            if (i < 2) {
+                item
+            } else {
+                item.opposite
+            }
+        }.filterNotNull()
 
     fun Iterable<MetaAction>.addReccurent(state: FieldState) = this.toList().toMutableList().apply {
         this.addAll(reccurent())
     }
 
-    private fun reccurent() = listOf(CLEANUP_ORDERS, CLEANUP_GATE, ACTIVATE_TURRETS, RUN_AWAY_BUILDERS)
+    private fun reccurent() = listOf(CLEANUP_ORDERS, CLEANUP_GATE, ACTIVATE_TURRETS, RUN_AWAY_BUILDERS, RETREAT_RANGED_UNITS)
 
     fun <T> T.log(): T {
         println()
