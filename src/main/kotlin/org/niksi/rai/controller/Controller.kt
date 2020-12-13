@@ -62,7 +62,7 @@ class Controller(
         this.addAll(reccurent())
     }
 
-    private fun reccurent() = listOf(CLEANUP_ORDERS, CLEANUP_GATE, ACTIVATE_TURRETS, RUN_AWAY_BUILDERS)
+    private fun reccurent() = listOf(CLEANUP_ORDERS, CLEANUP_GATE, ACTIVATE_TURRETS, RUN_AWAY_BUILDERS, RETREAT_RANGED_UNITS)
 
     fun <T> T.log(): T {
         println()

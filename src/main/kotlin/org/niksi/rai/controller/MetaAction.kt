@@ -49,26 +49,36 @@ val RUN_AWAY_BUILDERS = MetaAction("RUN_AWAY_BUILDERS") {
     it.myBuilders.near(it.enemies, 8).act { surrender ->
         val closest = it.enemyInfantry.closest(surrender.position)
         if  (closest != null) {
-            surrender.moveAsap(
-                Vec2Int(
-                    (surrender.position.x + (surrender.position.x - closest.position.x).sign),
-                    surrender.position.y + (surrender.position.y - closest.position.y).sign
-                )
-            )
+            surrender.retreatFrom(closest)
         } else {
             EntityAction()
         }
     }
 }
 
-val RETREAT_RANGED_UNITS = MetaAction("RUN_AWAY_BUILDERS") {
-    it.myRanged.near(it.enemies, 8).act { surrender ->
-        val closeEnemy = it.enemyInfantry.allInRadius(10, surrender.position)
-        val closeMy = it.myInfantry.allInRadius(10, surrender.position)
-        //closeEnemy.sumBy { it.health } < closeMy
+fun Entity.retreatFrom(enemy: Entity) = retreatFrom(enemy.position)
+fun Entity.retreatFrom(enemyPosition: Vec2Int) = moveAsap(
+    Vec2Int(
+        (this.position.x + (this.position.x - enemyPosition.x).sign),
+        this.position.y + (this.position.y - enemyPosition.y).sign
+    )
+)
 
-        EntityAction()
-    }
+val RETREAT_RANGED_UNITS = MetaAction("RUN_AWAY_BUILDERS") {
+    it.myRanged
+        .near(it.enemies, 6)
+        .map { surrender ->
+            val closeEnemy = it.enemyInfantry.allInRadius(7, surrender.position)
+            val closeMy = it.myInfantry.allInRadius(7, surrender.position)
+            if (closeEnemy.sumBy { it.health } > closeMy.sumBy { it.health }) {
+                it.canceldOrder(surrender)
+                surrender.id to surrender.retreatFrom(closeEnemy.middlePoint())
+            } else {
+                surrender.id to surrender.attackClosestToYou(it, it.enemies)
+            }
+        }
+        .toMap()
+        .toMutableMap()
 }
 
 val CLEANUP_ORDERS = MetaAction("CLEANUP_ORDERS") {
@@ -363,14 +373,18 @@ fun List<Entity>.closest(position: Vec2Int?) = if (position != null) {
 }
 
 private fun List<Entity>.attackClosestToYou(fieldState: FieldState, targets: List<Entity>) = act {
-    val closest = targets.closest(it.position)
-    when (closest) {
+    it.attackClosestToYou(fieldState, targets)
+}
+
+fun Entity.attackClosestToYou(fieldState: FieldState, targets: List<Entity>): EntityAction {
+    val closest = targets.closest(this.position)
+    return when (closest) {
         null -> EntityAction(null, null, null, null)
         else -> {
-            val distance = fieldState.properties(it.entityType).attack?.attackRange ?: 0
-            var position = (closest.position to it.position).transitToDistance(distance)
+            val distance = fieldState.properties(this.entityType).attack?.attackRange ?: 0
+            var position = (closest.position to this.position).transitToDistance(distance)
             if (fieldState.myInfantry.any { it.position.isSame(position) }) {
-                position = position.randomShift(1,1)
+                position = position.randomShift(1, 1)
             }
             EntityAction(
                 MoveAction(position.coerce(globalSettings.mapSize), true, true),
