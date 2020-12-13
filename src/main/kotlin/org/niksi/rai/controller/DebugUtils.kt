@@ -1,6 +1,7 @@
 package org.niksi.rai.controller
 
 import model.Vec2Int
+import org.niksi.rai.langpack.transitToDistance
 import kotlin.random.Random
 
 fun Controller.checkConsistency(currentTick: Int, myId: Int, mapSize: Int, maxPathfindNodes: Int, maxTickCount: Int, fogOfWar: Boolean) {
