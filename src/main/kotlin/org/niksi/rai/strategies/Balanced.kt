@@ -8,7 +8,6 @@ val Balanced = StrategicDsl {
     BUILD_UNIT_BUILDER.rule("Builders are Limited") {
         (it.myBuilders.count() > 0).isAlwaysNeeded()
         (it.myBuilders.count() > 5).isGood()
-        (it.myBuilders.count() > 5 && it.myInfantry.count() < 1.5*it.myBuilders.count()).isBad()
     }
 
     BUILD_UNIT_MELEE.rule("Builders are Limited") {
@@ -17,11 +16,17 @@ val Balanced = StrategicDsl {
         (it.myBuilders.count() > 4).isBad()
     }
 
+    (BUILD_UNIT_BUILDER to BUILD_UNIT_RANGED).pairedRule("") {
+        true.isNotAcceptable()
+        (it.myBuilders.count() > 8).isAlwaysNeeded()
+        val choice = (it.myInfantry.count() > 1.5 * it.myBuilders.count())
+        choice
+    }
+
     BUILD_UNIT_RANGED.rule("Builders are Limited") {
         (it.myBuilders.count() < 5).isBad()
         (it.myMelee.count() > 0).isGood()
         (it.myBuilders.count() > 4).isGood()
-        (it.myBuilders.count() > 5 && it.myInfantry.count() > 1.5*it.myBuilders.count()).isNotAcceptable()
     }
 
     BUILD_BASE_RANGED.rule("Builders are Limited") {

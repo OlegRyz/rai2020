@@ -493,7 +493,7 @@ fun List<Entity>.allInRadius(radius:Int, center: Vec2Int) = filter { distance(it
 
 fun List<Entity>.randomInRadius(radius:Int, center: Vec2Int) = allInRadius(radius, center).randomOrNull()
 
-class MetaAction(val name: String = "", val decoder: MetaAction.(FieldState) -> MutableMap<Int, EntityAction>?) {
+data class MetaAction(val name: String = "", val decoder: MetaAction.(FieldState) -> MutableMap<Int, EntityAction>?) {
     var opposite: MetaAction? = null
     fun DecodeToAction(state: FieldState) = decoder(state) ?: mutableMapOf()
 
