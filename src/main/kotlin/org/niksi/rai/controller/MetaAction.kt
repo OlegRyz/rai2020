@@ -45,6 +45,52 @@ val ATTACK_NEIGHBOR = MetaAction("ATTACK_NEIGHBOR") {
         .move(target)
 }
 
+val SNAKE = MetaAction("SNAKE") { state ->
+    val head = Vec2Int(18, 20)
+    if (state.myMelee.count() > 5) {
+        print(11)
+    }
+
+    val snakeUnits = state.ordersCache.getEntities(this, state.myMelee)
+        .let {
+            if (it.count() < 5) {
+                val refill = state.myFreeMelee.closest(head, 5 - it.count())
+                state.ordersCache.record(refill, this)
+                it.plus(refill)
+            } else {
+                it
+            }
+        }
+    val meleeCount = snakeUnits.count()
+    snakeUnits
+        .sortedBy { distance(it.position, head) }
+        .zip(0..meleeCount)
+        .map { (entity, i) ->
+            entity.id to entity.moveAsap(head.shift(0, -i))
+        }
+        .toMap()
+        .toMutableMap()
+}
+val SNAKE_MOVE = MetaAction("") { state ->
+    val snakeUnits = state.ordersCache.getEntities(SNAKE, state.myMelee).
+            plus(state.ordersCache.getEntities(this, state.myMelee))
+
+    state.recordOrder(snakeUnits, this)
+    snakeUnits.map{
+        it.id to it.moveOneStep(0, 10)
+    }
+        .toMap()
+        .toMutableMap()
+}
+
+private fun Entity.moveOneStep(x: Int, y: Int): EntityAction =
+    EntityAction(
+        MoveAction(position.shift(x, y), false, true),
+        null,
+        null,
+        null
+    )
+
 val RUN_AWAY_BUILDERS = MetaAction("RUN_AWAY_BUILDERS") {
     it.myBuilders.near(it.enemies, 8).act { surrender ->
         val closest = it.enemyInfantry.closest(surrender.position)
@@ -93,12 +139,19 @@ val CLEANUP_ORDERS = MetaAction("CLEANUP_ORDERS") {
 }
 
 val CLEANUP_GATE = MetaAction("CLEANUP_GATE") {
-    val gate = it.myRangedBase?.gatePosition(it)
-    if (gate == null) {
-        mutableMapOf()
-    } else {
-        it.myInfantry.firstOrNull { warior -> warior.position.isSame(gate) }?.move(Vec2Int(18, 18))
+    val state = it
+    moveFrom(it.myRangedBase?.gatePosition(it), it).also {
+        it.putAll(moveFrom(state.myMeleeBase?.gatePosition(state), state))
     }
+}
+
+private fun moveFrom(
+    gate: Vec2Int?,
+    it: FieldState
+) = if (gate == null) {
+    mutableMapOf()
+} else {
+    it.myInfantry.firstOrNull { warior -> warior.position.isSame(gate) }?.move(Vec2Int(4, 4)) ?: mutableMapOf()
 }
 
 val DEFEND_BUILDINGS = MetaAction("DEFEND_BUILDINGS") {
@@ -298,6 +351,12 @@ fun List<Entity>.closest(position: Vec2Int?) = if (position != null) {
     minByOrNull { manhDistance(it.position, position) }
 } else {
     null
+}
+
+fun List<Entity>.closest(position: Vec2Int?, n: Int) = if (position != null) {
+    sortedBy { manhDistance(it.position, position) }.take(n)
+} else {
+    listOf()
 }
 
 private fun List<Entity>.attackClosestToYou(fieldState: FieldState, targets: List<Entity>) = act {

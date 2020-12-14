@@ -13,6 +13,11 @@ class OrdersCache: MutableMap<Int,OrderItem> by mutableMapOf() {
 
     fun getId(metaAction: MetaAction): List<Int> = filter { (_, orderItem) ->
         orderItem.metaAction.isSame(metaAction)}.keys.toList()
+    fun getEntities(metaAction: MetaAction, entities: List<Entity>) = getId(metaAction)
+        .map { id ->
+            entities.firstOrNull { id == it.id }
+        }
+        .filterNotNull()
 }
 
 data class OrderItem(val metaAction: MetaAction,

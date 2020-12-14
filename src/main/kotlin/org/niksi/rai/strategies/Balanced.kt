@@ -5,6 +5,13 @@ import model.EntityType
 import org.niksi.rai.controller.*
 
 val Balanced = StrategicDsl {
+    SNAKE.rule("") {
+        true.isAlwaysNeeded()
+    }
+    SNAKE_MOVE.rule("") {
+        true.isNotAcceptable()
+        (it.ordersCache.getId(SNAKE).count() >= 5).isAlwaysNeeded()
+    }
     BUILD_UNIT_BUILDER.rule("Builders are Limited") {
         (it.myBuilders.count() > 0).isAlwaysNeeded()
         (it.myBuilders.count() > 5).isGood()
