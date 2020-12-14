@@ -30,9 +30,8 @@ val Balanced = StrategicDsl {
     }
 
     BUILD_BASE_RANGED.rule("Builders are Limited") {
-        (it.myBuilders.count() < 5).isBad()
-        (it.myMelee.count() > 0).isGood()
-        (it.myBuilders.count() > 4).isGood()
+        true.isNotAcceptable()
+        (it.myRangedBase == null && it.me.resource + it.myBuilders.count() * 3 > 500).isAlwaysNeeded()
     }
 
     COLLECT_RESOURCES.rule("Builders are Limited") {
