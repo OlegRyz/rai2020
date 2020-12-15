@@ -193,12 +193,14 @@ private fun MetaAction.build(it: FieldState, buildingType: EntityType): MutableM
 }
 
 val HouseSpots = listOf(
-    List(10){it -> Vec2Int(0,it * 3)},
-    List(9){it -> Vec2Int(it * 3 + 11, 0)},
-    List(9){it -> Vec2Int(it * 4 + 4, 11)},
+    List(6){it -> Vec2Int(0,it * 3)},
+    List(6){it -> Vec2Int(it * 3 + 11, 0)},
+    List(6){it -> Vec2Int(it * 4 + 4, 11)},
     listOf(Vec2Int(11,4),Vec2Int(11,7), Vec2Int(11, 19), Vec2Int(11, 15)),
-    List(7){it -> Vec2Int(it * 5 + 5, 24)},
-    List(7){it -> Vec2Int(24,it * 5 + 5)},
+    List(6){it -> Vec2Int(it * 5 + 5, 24)},
+    List(6){it -> Vec2Int(24,it * 5 + 5)},
+    List(6){it -> Vec2Int(0,it * 3 + 15)},
+    List(6){it -> Vec2Int(it * 3 + 26, 0)},
 ).flatten()
 
 val RangedBaseSpots = List(3) { x -> List(3) { y -> Vec2Int(4 + x, 0 + y) }}.flatten()
