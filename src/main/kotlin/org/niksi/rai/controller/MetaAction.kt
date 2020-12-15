@@ -219,7 +219,7 @@ val DEFEND_BUILDINGS = MetaAction("DEFEND_BUILDINGS") {
     if (targets.isEmpty()) {
         mutableMapOf()
     } else {
-        it.myInfantry.near(it.myBuildings, 150).attackClosestToClosestDefendable(it, targets, it.myBuildings)
+        it.myInfantry.near(it.myBuildings, 10).attackClosestToClosestDefendable(it, targets, it.myBuildings)
     }
 }
 
