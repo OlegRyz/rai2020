@@ -164,7 +164,7 @@ fun Entity.retreatFrom(enemyPosition: Vec2Int) = moveAsap(
     )
 )
 
-val RETREAT_RANGED_UNITS = MetaAction("RUN_AWAY_BUILDERS") {
+val RETREAT_RANGED_UNITS = MetaAction("RETREAT_RANGED_UNITS") {
     it.myRanged
         .near(it.enemies, 6)
         .map { surrender ->
