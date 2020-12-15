@@ -4,18 +4,11 @@ import model.EntityType
 import org.niksi.rai.controller.*
 
 val Balanced = StrategicDsl {
-    DEFENSIVE_WALL_RIGHT.rule("debug rule") {
+    DEFENSIVE_WALL_RIGHT.rule("DEFENSIVE_WALL_RIGHT") {
         true.isNotAcceptable()
         it.enemyInfantry.inZone(25, 60, 0, 35).any().isGood()
     }
-    SNAKE.rule("debug rule") {
-        true.isAlwaysNeeded()
-    }
-    SNAKE_MOVE.rule("") {
-        true.isNotAcceptable()
-        (it.ordersCache.getId(SNAKE).count() >= 5).isAlwaysNeeded()
-        (it.ordersCache.getId(SNAKE_MOVE).count() >= 5).isAlwaysNeeded()
-    }
+
     BUILD_UNIT_BUILDER.rule("Builders are Limited") {
         (it.myBuilders.count() > 0).isAlwaysNeeded()
         (it.myBuilders.count() > 5).isGood()
