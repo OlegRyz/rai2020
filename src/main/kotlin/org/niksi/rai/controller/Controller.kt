@@ -48,9 +48,9 @@ class Controller(
         DO_NOTHING, COLLECT_RESOURCES, ATTACK_ENEMY, BUILD_UNIT_BUILDER, BUILD_UNIT_RANGED, BUILD_UNIT_MELEE,
         BUILD_HOUSE, REPAIR_BUILDINGS_ALL, DEFEND_BUILDINGS, ATTACK_NEIGHBOR, BUILD_BASE_RANGED)
 
-    fun Iterable<MetaAction>.takeBest(state: FieldState) =
-        sortedByDescending { predictor.predict(it, state) }
-        .mapIndexed { i, item ->
+    fun Iterable<MetaAction>.takeBest(state: FieldState) = map { it to predictor.predict(it, state) }
+        .sortedByDescending { it.second }
+        .mapIndexed { i, (item, _) ->
             if (i < 2) {
                 item
             } else {
