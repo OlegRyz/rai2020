@@ -219,7 +219,11 @@ val DEFEND_BUILDINGS = MetaAction("DEFEND_BUILDINGS") { state->
     if (targets.isEmpty()) {
         mutableMapOf()
     } else {
-        state.myInfantry.near(state.myBuildings, 10).run{
+        state.myInfantry.near(state.myBuildings, 150)
+            .sortedBy {
+                distance(it.position, targets.closest(it.position)?.position ?: it.position) }
+            .take(targets.count() * 2)
+            .run{
             forEach { state.canceldOrder(it) }
             attackClosestToClosestDefendable(state, targets, state.myBuildings)
         }
