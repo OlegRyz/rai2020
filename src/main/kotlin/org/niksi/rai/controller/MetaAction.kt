@@ -56,7 +56,7 @@ val ATTACK_NEIGHBOR_CLEANUP = MetaAction("ATTACK_NEIGHBOR_CLEANUP") { state ->
     mutableMapOf()
 }
 
-private fun List<Entity>.inZone(x1: Int, x2: Int, y1: Int, y2: Int) = filter {it.position.x in x1..x2 && it.position.y in y1..y2}
+fun List<Entity>.inZone(x1: Int, x2: Int, y1: Int, y2: Int) = filter {it.position.x in x1..x2 && it.position.y in y1..y2}
 
 val ATTACK_DIAGONAL = MetaAction("ATTACK_NEIGHBOR") {
     val target = Vec2Int(globalSettings.mapSize - 25, globalSettings.mapSize - 25)
@@ -74,22 +74,20 @@ val ATTACK_DIAGONAL = MetaAction("ATTACK_NEIGHBOR") {
     }
 }
 
-val FORMATION = MetaAction("FORMATION") { state ->
-    val head = Vec2Int(13, 20)
-    val form = listOf(
-        Vec2Int(0,1),
-        Vec2Int(1,1),
-        Vec2Int(1,0),
-        Vec2Int(1,2),
-        Vec2Int(2,1),
-        Vec2Int(2,2),
-        Vec2Int(0,2),
-        Vec2Int(2,0),
-    )
+val DEFENSIVE_WALL_RIGHT = MetaAction("FORMATION") { state ->
+    val center = state.enemyInfantry.inZone(25, 40, 0, 40).middlePoint()
+    val head = if (center.y == 0) {
+        Vec2Int(25, 12)
+    } else {
+        Vec2Int(25, center.y - 4)
+    }
+    val form = List(8) {
+        Vec2Int(0, it)
+    }
     makeFormation(state, form, head)
 }
 
-private fun MetaAction.makeFormation(
+fun MetaAction.makeFormation(
     state: FieldState,
     form: List<Vec2Int>,
     head: Vec2Int
@@ -99,7 +97,7 @@ private fun MetaAction.makeFormation(
 
     return units
         .zip(form) { entity, position ->
-            entity.id to entity.moveAsap(head.shift(position))
+            entity.id to entity.move(head.shift(position), attackRange = 0)
         }
         .toMap()
         .toMutableMap()
@@ -194,20 +192,26 @@ val CLEANUP_ORDERS = MetaAction("CLEANUP_ORDERS") {
     }
 }
 
-val CLEANUP_GATE = MetaAction("CLEANUP_GATE") {
-    val state = it
-    moveFrom(it.myRangedBase?.gatePosition(it), it).also {
-        it.putAll(moveFrom(state.myMeleeBase?.gatePosition(state), state))
-    }
+val CLEANUP_GATE = MetaAction("CLEANUP_GATE") { state ->
+    val actions =  listOf(moveFrom(state.myRangedBase?.gatePosition(state), state),
+        moveFrom(state.myMeleeBase?.gatePosition(state), state))
+        .filterNotNull()
+    actions
+        .toMap()
+        .toMutableMap()
 }
 
 private fun moveFrom(
     gate: Vec2Int?,
     it: FieldState
 ) = if (gate == null) {
-    mutableMapOf()
+    null
 } else {
-    it.myInfantry.firstOrNull { warior -> warior.position.isSame(gate) }?.move(Vec2Int(4, 4)) ?: mutableMapOf()
+    it.myInfantry
+        .firstOrNull { warior -> warior.position.isSame(gate) }
+    ?.let {
+        it.id to it.move(Vec2Int(18, 18))
+    }
 }
 
 val DEFEND_BUILDINGS = MetaAction("DEFEND_BUILDINGS") {
@@ -448,11 +452,11 @@ private fun List<Entity>.attackClosestToClosestDefendable(fieldState: FieldState
     }
 }
 
-private fun List<Entity>.move(point: Vec2Int) = act {
+private fun List<Entity>.move(point: Vec2Int,attackRange:Int = 10) = act {
     EntityAction(
         MoveAction(point.coerce(globalSettings.mapSize), true, true),
         null,
-        AttackAction(null, AutoAttack(10, arrayOf(EntityType.MELEE_UNIT, EntityType.RANGED_UNIT))),
+        AttackAction(null, AutoAttack(attackRange, arrayOf(EntityType.MELEE_UNIT, EntityType.RANGED_UNIT))),
         null)
 }
 

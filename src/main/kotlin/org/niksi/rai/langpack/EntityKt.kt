@@ -47,16 +47,11 @@ fun Entity.moveAsap(point: Vec2Int) =  EntityAction(
     null
 )
 
-fun Entity.move(point: Vec2Int?) = mutableMapOf(
-    id to when (point) {
-        null -> EntityAction()
-        else -> EntityAction(
-            MoveAction(point.coerce(globalSettings.mapSize), true, true),
-            null,
-            AttackAction(null, AutoAttack(10, arrayOf(EntityType.MELEE_UNIT, EntityType.RANGED_UNIT))),
-            null
-        )
-    }
+fun Entity.move(point: Vec2Int, attackRange: Int = 10) = EntityAction(
+    MoveAction(point.coerce(globalSettings.mapSize), true, true),
+    null,
+    AttackAction(null, AutoAttack(attackRange, arrayOf(EntityType.MELEE_UNIT, EntityType.RANGED_UNIT))),
+    null
 )
 
 fun Entity.build(

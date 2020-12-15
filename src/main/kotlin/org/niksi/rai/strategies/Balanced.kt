@@ -1,12 +1,12 @@
 package org.niksi.rai.strategies
 
-import model.Entity
 import model.EntityType
 import org.niksi.rai.controller.*
 
 val Balanced = StrategicDsl {
-    FORMATION.rule("debug rule") {
+    DEFENSIVE_WALL_RIGHT.rule("debug rule") {
         true.isNotAcceptable()
+        it.enemyInfantry.inZone(25, 120, 0, 50).any().isAlwaysNeeded()
     }
     SNAKE.rule("debug rule") {
         true.isAlwaysNeeded()
