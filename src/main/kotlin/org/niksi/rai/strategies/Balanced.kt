@@ -11,6 +11,7 @@ val Balanced = StrategicDsl {
     SNAKE_MOVE.rule("") {
         true.isNotAcceptable()
         (it.ordersCache.getId(SNAKE).count() >= 5).isAlwaysNeeded()
+        (it.ordersCache.getId(SNAKE_MOVE).count() >= 5).isAlwaysNeeded()
     }
     BUILD_UNIT_BUILDER.rule("Builders are Limited") {
         (it.myBuilders.count() > 0).isAlwaysNeeded()

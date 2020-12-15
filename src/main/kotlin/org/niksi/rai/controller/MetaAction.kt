@@ -77,9 +77,6 @@ val ATTACK_DIAGONAL = MetaAction("ATTACK_NEIGHBOR") {
 
 val SNAKE = MetaAction("SNAKE") { state ->
     val head = Vec2Int(18, 20)
-    if (state.myMelee.count() > 5) {
-        print(11)
-    }
 
     val snakeUnits = state.ordersCache.getEntities(this, state.myMelee)
         .let {
@@ -107,7 +104,7 @@ val SNAKE_MOVE = MetaAction("") { state ->
 
     state.recordOrder(snakeUnits, this)
     snakeUnits.map{
-        it.id to it.moveOneStep(0, 10)
+        it.id to it.moveOneStep(0, 1)
     }
         .toMap()
         .toMutableMap()
