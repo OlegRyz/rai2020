@@ -2,6 +2,8 @@ package org.niksi.rai.controller
 
 import model.*
 import org.niksi.rai.strategies.Balanced
+import org.niksi.rai.strategies.F_EARLY_STAGE_COLLECT_RESOURCES
+import org.niksi.rai.strategies.FastBuilding
 import kotlin.collections.*
 
 data class GlobalSettings(val mapSize: Int) {
@@ -17,7 +19,7 @@ class Controller(
         val maxTickCount: Int,
         val fogOfWar: Boolean) {
     var bestAction = Action()
-    val dsl = Balanced
+    val dsl = FastBuilding
     val predictor = Predictor(dsl)
     val ordersCache = OrdersCache()
 
@@ -45,19 +47,7 @@ class Controller(
     }
 
     private fun thoughtfulActions(): Iterable<MetaAction> = listOf(
-        DO_NOTHING,
-        COLLECT_RESOURCES,
-        ATTACK_ENEMY,
-        ATTACK_DIAGONAL,
-        ATTACK_NEIGHBOR,
-        DEFEND_BUILDINGS,
-        DEFENSIVE_WALL_RIGHT,
-        BUILD_UNIT_BUILDER,
-        BUILD_UNIT_RANGED,
-        BUILD_UNIT_MELEE,
-        BUILD_HOUSE,
-        BUILD_BASE_RANGED,
-        REPAIR_BUILDINGS_ALL,
+        F_EARLY_STAGE_COLLECT_RESOURCES
     )
 
     fun Iterable<MetaAction>.takeBest(state: FieldState) = map { it to predictor.predict(it, state) }
@@ -74,7 +64,7 @@ class Controller(
         this.addAll(reccurent())
     }
 
-    private fun reccurent() = listOf(CLEANUP_ORDERS, CLEANUP_GATE, ACTIVATE_TURRETS, RUN_AWAY_BUILDERS, ATTACK_NEIGHBOR_CLEANUP)
+    private fun reccurent(): List<MetaAction> = emptyList()
 
     fun <T> T.log(currentTick: Int): T {
         println()
