@@ -94,7 +94,7 @@ private fun MetaAction.makeFormation(
     form: List<Vec2Int>,
     head: Vec2Int
 ): MutableMap<Int, EntityAction> {
-    val units = state.ordersCache.getEntities(this, state.myMelee)
+    val units = state.ordersCache.getEntities(this, state.myInfantry)
         .refill(form.size, state.myFreeInfantry, head, state, this)
 
     return units
@@ -125,29 +125,11 @@ fun List<Entity>.refill(
 val SNAKE = MetaAction("SNAKE") { state ->
     val head = Vec2Int(18, 20)
 
-    val snakeUnits = state.ordersCache.getEntities(this, state.myMelee)
-        .let {
-            if (it.count() < 5) {
-                val refill = state.myFreeMelee.closest(head, 5 - it.count())
-                state.ordersCache.record(refill, this)
-                it.plus(refill)
-            } else {
-                it
-            }
-        }
-    val meleeCount = snakeUnits.count()
-    snakeUnits
-        .sortedBy { distance(it.position, head) }
-        .zip(0..meleeCount)
-        .map { (entity, i) ->
-            entity.id to entity.moveAsap(head.shift(0, -i))
-        }
-        .toMap()
-        .toMutableMap()
+    makeFormation(state, List(5) { Vec2Int(0, -it) }, head)
 }
-val SNAKE_MOVE = MetaAction("") { state ->
-    val snakeUnits = state.ordersCache.getEntities(SNAKE, state.myMelee).
-            plus(state.ordersCache.getEntities(this, state.myMelee))
+val SNAKE_MOVE = MetaAction("SNAKE_MOVE") { state ->
+    val snakeUnits = state.ordersCache.getEntities(SNAKE, state.myInfantry).
+            plus(state.ordersCache.getEntities(this, state.myInfantry))
 
     state.recordOrder(snakeUnits, this)
     snakeUnits.map{
