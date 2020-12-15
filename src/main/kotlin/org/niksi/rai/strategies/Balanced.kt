@@ -47,9 +47,15 @@ val Balanced = StrategicDsl {
 
     ATTACK_NEIGHBOR.rule("") {
         true.isBad()
-        (2*it.ordersCache.getId(ATTACK_NEIGHBOR).count() < it.myInfantry.count()).isGood()
+        (2*(it.ordersCache.getId(ATTACK_NEIGHBOR).count() + it.ordersCache.getId(ATTACK_DIAGONAL).count())
+                < it.myInfantry.count()).isGood()
         (it.myInfantry.count() < 9).isBad()
 
+    }
+
+    ATTACK_DIAGONAL.rule("") {
+        true.isNotAcceptable()
+        (2*it.ordersCache.getId(ATTACK_DIAGONAL).count() < it.myInfantry.count()).isGood()
     }
 
     DEFEND_BUILDINGS.rule("") {

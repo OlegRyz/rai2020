@@ -35,13 +35,45 @@ val ATTACK_ENEMY = MetaAction("ATTACK_ENEMY") {
 }
 
 val ATTACK_NEIGHBOR = MetaAction("ATTACK_NEIGHBOR") {
-    val target = Vec2Int(5, globalSettings.mapSize - 25)
+    val target = Vec2Int(5, globalSettings.mapSize - 10)
     val portion = it.myFreeInfantry.count() / 2
     it.myFreeInfantry
         .sortedBy { warrior -> distance(warrior.position, target) }
         .take(portion)
         .move(target)
 }
+
+val ATTACK_NEIGHBOR_CLEANUP = MetaAction("ATTACK_NEIGHBOR_CLEANUP") { state ->
+    state
+        .myInfantry
+        .inZone(0,50,globalSettings.mapSize - 50, globalSettings.mapSize)
+        .forEach { state.canceldOrderIf(it, ATTACK_NEIGHBOR) }
+
+    state
+        .myInfantry
+        .inZone(globalSettings.mapSize - 50,globalSettings.mapSize,globalSettings.mapSize - 50, globalSettings.mapSize)
+        .forEach { state.canceldOrderIf(it, ATTACK_DIAGONAL) }
+    mutableMapOf()
+}
+
+private fun List<Entity>.inZone(x1: Int, x2: Int, y1: Int, y2: Int) = filter {it.position.x in x1..x2 && it.position.y in y1..y2}
+
+val ATTACK_DIAGONAL = MetaAction("ATTACK_NEIGHBOR") {
+    val target = Vec2Int(globalSettings.mapSize - 25, globalSettings.mapSize - 25)
+    val portion = it.myFreeInfantry.count() / 2
+
+    val lead = it.myFreeInfantry.closest(target)
+    if (lead != null) {
+
+        it.myFreeInfantry
+            .sortedBy { warrior -> distance(warrior.position, lead.position) }
+            .take(portion)
+            .move(target)
+    } else {
+        mutableMapOf()
+    }
+}
+
 
 val RUN_AWAY_BUILDERS = MetaAction("RUN_AWAY_BUILDERS") {
     it.myBuilders.near(it.enemies, 8).act { surrender ->

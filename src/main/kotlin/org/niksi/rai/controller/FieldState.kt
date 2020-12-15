@@ -65,6 +65,12 @@ class FieldState(
         val keys = ordersCache.entries.filter { it.value.metaAction.isSame(action) }.map { it.key }
         keys.forEach { ordersCache.remove(it) }
     }
+
+    fun canceldOrderIf(entity: Entity, metaAction: MetaAction) {
+        if (ordersCache[entity.id]?.metaAction?.isSame(metaAction) == true) {
+            ordersCache.remove(entity.id)
+        }
+    }
 }
 
 private fun List<Entity>.filterPlayerId(playerId: Int) = filter { it.playerId == playerId }
