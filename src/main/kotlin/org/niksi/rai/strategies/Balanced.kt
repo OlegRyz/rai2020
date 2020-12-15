@@ -37,9 +37,8 @@ val Balanced = StrategicDsl {
     }
 
     BUILD_BASE_RANGED.rule("Builders are Limited") {
-        (it.myBuilders.count() < 5).isBad()
-        (it.myMelee.count() > 0).isGood()
-        (it.myBuilders.count() > 4).isGood()
+        true.isNotAcceptable()
+        (it.myRangedBase == null && it.me.resource + it.myBuilders.count() * 3 > 500).isAlwaysNeeded()
     }
 
     COLLECT_RESOURCES.rule("Builders are Limited") {
@@ -55,9 +54,15 @@ val Balanced = StrategicDsl {
 
     ATTACK_NEIGHBOR.rule("") {
         true.isBad()
-        (2*it.ordersCache.getId(ATTACK_NEIGHBOR).count() < it.myInfantry.count()).isGood()
+        (2*(it.ordersCache.getId(ATTACK_NEIGHBOR).count() + it.ordersCache.getId(ATTACK_DIAGONAL).count())
+                < it.myInfantry.count()).isGood()
         (it.myInfantry.count() < 9).isBad()
 
+    }
+
+    ATTACK_DIAGONAL.rule("") {
+        true.isNotAcceptable()
+        (2*it.ordersCache.getId(ATTACK_DIAGONAL).count() < it.myInfantry.count()).isGood()
     }
 
     DEFEND_BUILDINGS.rule("") {
@@ -74,7 +79,6 @@ val Balanced = StrategicDsl {
         (it.myPopulationLimit - it.myPopulation < 3).isAlwaysNeeded()
         (it.myPopulation == 0 || it.myPopulationLimit > 2 * it.myPopulation).isNotAcceptable()
         (it.me.resource < it.properties(EntityType.HOUSE).initialCost + it.myFreeBuilders.count()).isNotAcceptable()
-        (it.ordersCache.getId(BUILD_HOUSE).count() > 1).isNotAcceptable()
         if (it.myBuildings.any{!it.active}) {
             it.canceldOrder(BUILD_HOUSE)
         }

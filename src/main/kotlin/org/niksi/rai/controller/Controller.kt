@@ -30,7 +30,7 @@ class Controller(
         val currentActions = thoughtfulActions()
             .takeBest(state)
             .addReccurent(state)
-            .log()
+            .log(currentTick)
             .fold(mutableMapOf<Int, EntityAction>()) { acc, item ->
                 acc.putAll(item.DecodeToAction(state))
                 acc
@@ -48,9 +48,9 @@ class Controller(
         DO_NOTHING, COLLECT_RESOURCES,BUILD_UNIT_BUILDER, BUILD_UNIT_MELEE,
         BUILD_HOUSE, SNAKE, SNAKE_MOVE, REPAIR_BUILDINGS_ALL)
 
-    fun Iterable<MetaAction>.takeBest(state: FieldState) =
-        sortedByDescending { predictor.predict(it, state) }
-        .mapIndexed { i, item ->
+    fun Iterable<MetaAction>.takeBest(state: FieldState) = map { it to predictor.predict(it, state) }
+        .sortedByDescending { it.second }
+        .mapIndexed { i, (item, _) ->
             if (i < 2) {
                 item
             } else {
@@ -62,10 +62,11 @@ class Controller(
         this.addAll(reccurent())
     }
 
-    private fun reccurent() = listOf(CLEANUP_ORDERS, CLEANUP_GATE, ACTIVATE_TURRETS, RUN_AWAY_BUILDERS, RETREAT_RANGED_UNITS)
+    private fun reccurent() = listOf(CLEANUP_ORDERS, CLEANUP_GATE, ACTIVATE_TURRETS, RUN_AWAY_BUILDERS, ATTACK_NEIGHBOR_CLEANUP)
 
-    fun <T> T.log(): T {
+    fun <T> T.log(currentTick: Int): T {
         println()
+        println(currentTick)
         println(this)
         return this
     }

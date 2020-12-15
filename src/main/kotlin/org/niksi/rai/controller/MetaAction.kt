@@ -3,9 +3,7 @@ package org.niksi.rai.controller
 import model.*
 import org.niksi.rai.langpack.*
 import kotlin.math.abs
-import kotlin.math.roundToInt
 import kotlin.math.sign
-import kotlin.random.Random
 
 val DO_NOTHING = MetaAction("DO_NOTHING") {
     mutableMapOf()
@@ -37,13 +35,45 @@ val ATTACK_ENEMY = MetaAction("ATTACK_ENEMY") {
 }
 
 val ATTACK_NEIGHBOR = MetaAction("ATTACK_NEIGHBOR") {
-    val target = Vec2Int(5, globalSettings.mapSize - 25)
+    val target = Vec2Int(5, globalSettings.mapSize - 10)
     val portion = it.myFreeInfantry.count() / 2
     it.myFreeInfantry
         .sortedBy { warrior -> distance(warrior.position, target) }
         .take(portion)
         .move(target)
 }
+
+val ATTACK_NEIGHBOR_CLEANUP = MetaAction("ATTACK_NEIGHBOR_CLEANUP") { state ->
+    state
+        .myInfantry
+        .inZone(0,50,globalSettings.mapSize - 50, globalSettings.mapSize)
+        .forEach { state.canceldOrderIf(it, ATTACK_NEIGHBOR) }
+
+    state
+        .myInfantry
+        .inZone(globalSettings.mapSize - 50,globalSettings.mapSize,globalSettings.mapSize - 50, globalSettings.mapSize)
+        .forEach { state.canceldOrderIf(it, ATTACK_DIAGONAL) }
+    mutableMapOf()
+}
+
+private fun List<Entity>.inZone(x1: Int, x2: Int, y1: Int, y2: Int) = filter {it.position.x in x1..x2 && it.position.y in y1..y2}
+
+val ATTACK_DIAGONAL = MetaAction("ATTACK_NEIGHBOR") {
+    val target = Vec2Int(globalSettings.mapSize - 25, globalSettings.mapSize - 25)
+    val portion = it.myFreeInfantry.count() / 2
+
+    val lead = it.myFreeInfantry.closest(target)
+    if (lead != null) {
+
+        it.myFreeInfantry
+            .sortedBy { warrior -> distance(warrior.position, lead.position) }
+            .take(portion)
+            .move(target)
+    } else {
+        mutableMapOf()
+    }
+}
+
 
 val SNAKE = MetaAction("SNAKE") { state ->
     val head = Vec2Int(18, 20)
@@ -193,8 +223,7 @@ val BUILD_UNIT_BUILDER = MetaAction("BUILD_UNIT_BUILDER") {
 }
 
 val BUILD_BASE_RANGED = MetaAction("BUILD_BASE_RANGED") {
-    val position = Vec2Int(0, 0)
-    it.myBuilders.closest(position)?.produce(it, EntityType.RANGED_BASE, position) ?: mutableMapOf()
+    build(it, EntityType.RANGED_BASE)
 }
 
 
@@ -221,37 +250,49 @@ val BUILD_UNIT_RANGED = MetaAction("BUILD_UNIT_RANGED") {
 }
 
 val BUILD_HOUSE = MetaAction("BUILD_HOUSE") {
-    val spot = findEmptySpot(it.properties(EntityType.HOUSE).size, it)
+    build(it, EntityType.HOUSE)
+}
 
-    if (spot != null) {
-        val  builderSpot = Vec2Int(spot.x + 3, spot.y + 2)
+private fun MetaAction.build(it: FieldState, buildingType: EntityType): MutableMap<Int, EntityAction>? {
+    val spotSize = it.properties(buildingType).size
+    val spot = findEmptySpot(spotSize, it, buildingType)
+
+    return if (spot != null) {
+        if (buildingType == EntityType.RANGED_BASE) {
+            println("build ranged")
+        }
         it
             .myBuilders
-            .closest(builderSpot)
+            .closest(spot.shift(2,2))
             ?.also { builder ->
-                println("Spot = ${builderSpot.toStr()}; ${builder.position.toStr()}; Id: ${builder.id}")
+                println("Spot = ${spot.toStr()}; ${builder.position.toStr()}; Id: ${builder.id}")
                 it.recordOrder(builder, this)
             }
-            ?.build(it, EntityType.HOUSE, builderSpot)
+            ?.build(it, buildingType, spot)
             .also { result ->
-            it.myFreeInfantry.gaters(it).move((it.myBuildings.middlePoint() to globalSettings.center).transit(0.2))
-        }
+                it.myFreeInfantry.gaters(it).move((it.myBuildings.middlePoint() to globalSettings.center).transit(0.2))
+            }
     } else {
         mutableMapOf()
     }
 }
 
-val SpotChoice = listOf(
-    List(10){it -> Vec2Int(0,it * 3)},
-    List(9){it -> Vec2Int(it * 3 + 4, 0)},
-    List(9){it -> Vec2Int(it * 4 + 4, 11)},
+val HouseSpots = listOf(
+    List(6){it -> Vec2Int(0,it * 3)},
+    List(6){it -> Vec2Int(it * 3 + 11, 0)},
+    List(6){it -> Vec2Int(it * 4 + 4, 11)},
     listOf(Vec2Int(11,4),Vec2Int(11,7), Vec2Int(11, 19), Vec2Int(11, 15)),
-    List(7){it -> Vec2Int(it * 5 + 5, 24)},
-    List(7){it -> Vec2Int(24,it * 5 + 5)},
+    List(6){it -> Vec2Int(it * 5 + 5, 24)},
+    List(6){it -> Vec2Int(24,it * 5 + 5)},
+    List(6){it -> Vec2Int(0,it * 3 + 15)},
+    List(6){it -> Vec2Int(it * 3 + 26, 0)},
 ).flatten()
 
-private fun findEmptySpot(spotSize: Int, state: FieldState): Vec2Int? {
-    return SpotChoice.firstOrNull { available(it, state, spotSize) }
+val RangedBaseSpots = List(3) { x -> List(3) { y -> Vec2Int(4 + x, 0 + y) }}.flatten()
+
+private fun findEmptySpot(spotSize: Int, state: FieldState, type: EntityType) = when(type) {
+    EntityType.RANGED_BASE -> RangedBaseSpots.firstOrNull { available(it, state, spotSize)}
+    else -> HouseSpots.firstOrNull { available(it, state, spotSize) }
 }
 
 fun available(spot: Vec2Int, state: FieldState, size: Int) =
@@ -300,7 +341,8 @@ val REPAIR_BUILDINGS = MetaAction("REPAIR_BUILDINGS") { state ->
 
 val REPAIR_BUILDINGS_ALL = MetaAction("REPAIR_BUILDINGS_ALL") { state ->
     val buildingsNumber =  state.myUnhealthyBuildings.count()
-    val portion = (state.myBuilders.size / 2).coerceAtMost(buildingsNumber * 3) / buildingsNumber
+    val workersNeeded = state.myUnhealthyBuildings.sumBy { state.properties(it).size }
+    val portion = (state.myBuilders.size / 2).coerceAtMost(workersNeeded) / buildingsNumber
     if (buildingsNumber > 0) {
         state
             .myUnhealthyBuildings
