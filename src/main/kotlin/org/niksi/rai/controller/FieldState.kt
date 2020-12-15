@@ -40,6 +40,7 @@ class FieldState(
     val myRanged = my.filterType(RANGED_UNIT)
     val myInfantry = listOf(myMelee, myRanged).flatten()
     val myFreeInfantry = myInfantry.free()
+    val myFreeMelee = myMelee.free()
 
     val myBuildings = my.filter { it.isBuilding }
     val myBuilderBase = myBuildings.firstOrNull { it.entityType == BUILDER_BASE }

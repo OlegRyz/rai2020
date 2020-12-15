@@ -19,6 +19,11 @@ class OrdersCache: MutableMap<Int,OrderItem> by mutableMapOf() {
         val toRemove = keys.filter { !alive.contains(it) }
         toRemove.forEach { remove(it) }
     }
+    fun getEntities(metaAction: MetaAction, entities: List<Entity>) = getId(metaAction)
+        .map { id ->
+            entities.firstOrNull { id == it.id }
+        }
+        .filterNotNull()
 }
 
 data class OrderItem(val metaAction: MetaAction,
