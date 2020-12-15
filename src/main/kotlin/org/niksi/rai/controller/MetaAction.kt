@@ -214,12 +214,15 @@ private fun moveFrom(
     }
 }
 
-val DEFEND_BUILDINGS = MetaAction("DEFEND_BUILDINGS") {
-    val targets = it.enemyInfantry.near(it.myBuildings, 20)
+val DEFEND_BUILDINGS = MetaAction("DEFEND_BUILDINGS") { state->
+    val targets = state.enemyInfantry.near(state.myBuildings, 20)
     if (targets.isEmpty()) {
         mutableMapOf()
     } else {
-        it.myInfantry.near(it.myBuildings, 10).attackClosestToClosestDefendable(it, targets, it.myBuildings)
+        state.myInfantry.near(state.myBuildings, 10).run{
+            forEach { state.canceldOrder(it) }
+            attackClosestToClosestDefendable(state, targets, state.myBuildings)
+        }
     }
 }
 
