@@ -31,6 +31,7 @@ fun Vec2Int.randomShift(dx: Int, dy: Int) = Vec2Int(
 )
 
 fun Vec2Int.shift(x: Int, y: Int) = Vec2Int(this.x + x, this.y + y)
+fun Vec2Int.shift(delta: Vec2Int) = Vec2Int(this.x + delta.x, this.y + delta.y)
 
 fun Vec2Int.isSame(position: Vec2Int) = this.x == position.x && this.y == position.y
 

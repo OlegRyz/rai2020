@@ -46,7 +46,7 @@ class Controller(
 
     private fun thoughtfulActions(): Iterable<MetaAction> = listOf(
         DO_NOTHING, COLLECT_RESOURCES,BUILD_UNIT_BUILDER, BUILD_UNIT_MELEE,
-        BUILD_HOUSE, SNAKE, SNAKE_MOVE, REPAIR_BUILDINGS_ALL)
+        BUILD_HOUSE, FORMATION, SNAKE_MOVE, REPAIR_BUILDINGS_ALL)
 
     fun Iterable<MetaAction>.takeBest(state: FieldState) = map { it to predictor.predict(it, state) }
         .sortedByDescending { it.second }

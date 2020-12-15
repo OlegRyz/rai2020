@@ -5,7 +5,7 @@ import model.EntityType
 import org.niksi.rai.controller.*
 
 val Balanced = StrategicDsl {
-    SNAKE.rule("") {
+    FORMATION.rule("debug rule") {
         true.isAlwaysNeeded()
     }
     SNAKE_MOVE.rule("") {

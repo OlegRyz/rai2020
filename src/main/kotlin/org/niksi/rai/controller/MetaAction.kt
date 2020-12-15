@@ -74,6 +74,53 @@ val ATTACK_DIAGONAL = MetaAction("ATTACK_NEIGHBOR") {
     }
 }
 
+val FORMATION = MetaAction("FORMATION") { state ->
+    val head = Vec2Int(13, 20)
+    val form = listOf(
+        Vec2Int(0,1),
+        Vec2Int(1,1),
+        Vec2Int(1,0),
+        Vec2Int(1,2),
+        Vec2Int(2,1),
+        Vec2Int(2,2),
+        Vec2Int(0,2),
+        Vec2Int(2,0),
+    )
+    makeFormation(state, form, head)
+}
+
+private fun MetaAction.makeFormation(
+    state: FieldState,
+    form: List<Vec2Int>,
+    head: Vec2Int
+): MutableMap<Int, EntityAction> {
+    val units = state.ordersCache.getEntities(this, state.myMelee)
+        .refill(form.size, state.myFreeInfantry, head, state, this)
+
+    return units
+        .zip(form) { entity, position ->
+            entity.id to entity.moveAsap(head.shift(position))
+        }
+        .toMap()
+        .toMutableMap()
+}
+
+fun List<Entity>.refill(
+    requiredNumber: Int,
+    reserve: List<Entity>,
+    head: Vec2Int,
+    state: FieldState,
+    metaAction: MetaAction,
+) = let {
+    if (it.count() < requiredNumber) {
+        val refill = reserve.closest(head, requiredNumber - it.count())
+        state.ordersCache.record(refill, metaAction)
+        it.plus(refill)
+    } else {
+        it
+    }
+}
+
 
 val SNAKE = MetaAction("SNAKE") { state ->
     val head = Vec2Int(18, 20)
