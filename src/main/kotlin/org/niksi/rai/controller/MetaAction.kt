@@ -459,9 +459,22 @@ private fun List<Entity>.move(point: Vec2Int,attackRange:Int = 10) = act {
     EntityAction(
         MoveAction(point.coerce(globalSettings.mapSize), true, true),
         null,
-        AttackAction(null, AutoAttack(attackRange, arrayOf(EntityType.MELEE_UNIT, EntityType.RANGED_UNIT))),
+        AttackAction(null, autoAttack(attackRange)),
         null)
 }
+
+fun autoAttack(attackRange: Int) =
+    AutoAttack(attackRange, arrayOf(
+        EntityType.WALL,
+        EntityType.HOUSE,
+        EntityType.BUILDER_BASE,
+        EntityType.BUILDER_UNIT,
+        EntityType.MELEE_BASE,
+        EntityType.MELEE_UNIT,
+        EntityType.RANGED_BASE,
+        EntityType.RANGED_UNIT,
+        EntityType.TURRET)
+    )
 
 fun List<Entity>.middlePoint(): Vec2Int {
     val x = this.map { it.position.x }.average()

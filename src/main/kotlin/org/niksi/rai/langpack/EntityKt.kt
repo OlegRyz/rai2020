@@ -50,7 +50,7 @@ fun Entity.moveAsap(point: Vec2Int) =  EntityAction(
 fun Entity.move(point: Vec2Int, attackRange: Int = 10) = EntityAction(
     MoveAction(point.coerce(globalSettings.mapSize), true, true),
     null,
-    AttackAction(null, AutoAttack(attackRange, arrayOf(EntityType.MELEE_UNIT, EntityType.RANGED_UNIT))),
+    AttackAction(null, autoAttack(attackRange)),
     null
 )
 
