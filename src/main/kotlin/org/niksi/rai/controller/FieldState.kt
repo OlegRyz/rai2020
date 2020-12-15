@@ -32,7 +32,7 @@ class FieldState(
     val nonResources = entities.filterNotType(RESOURCE)
 
     val me = players.first { it.id == myId }
-    val my = nonResources.filterPlayerId(myId)
+    val my = nonResources.filterPlayerId(myId).also { ordersCache.invalidate(it) }
     val myBuilders = my.filterType(BUILDER_UNIT)
     val myHouseBuilder: Entity? = myBuilders.firstOrNull { it.id == ordersCache.getId(BUILD_HOUSE).firstOrNull() }
     val myFreeBuilders = myBuilders.free()

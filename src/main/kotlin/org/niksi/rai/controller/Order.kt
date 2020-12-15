@@ -13,6 +13,12 @@ class OrdersCache: MutableMap<Int,OrderItem> by mutableMapOf() {
 
     fun getId(metaAction: MetaAction): List<Int> = filter { (_, orderItem) ->
         orderItem.metaAction.isSame(metaAction)}.keys.toList()
+
+    fun invalidate(myUnits: List<Entity>) {
+        val alive = myUnits.map {it.id}.toSet()
+        val toRemove = keys.filter { !alive.contains(it) }
+        toRemove.forEach { remove(it) }
+    }
 }
 
 data class OrderItem(val metaAction: MetaAction,
