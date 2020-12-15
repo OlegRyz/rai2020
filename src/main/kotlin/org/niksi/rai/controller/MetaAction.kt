@@ -254,7 +254,8 @@ val REPAIR_BUILDINGS = MetaAction("REPAIR_BUILDINGS") { state ->
 
 val REPAIR_BUILDINGS_ALL = MetaAction("REPAIR_BUILDINGS_ALL") { state ->
     val buildingsNumber =  state.myUnhealthyBuildings.count()
-    val portion = (state.myBuilders.size / 2).coerceAtMost(buildingsNumber * 3) / buildingsNumber
+    val workersNeeded = state.myUnhealthyBuildings.sumBy { state.properties(it).size }
+    val portion = (state.myBuilders.size / 2).coerceAtMost(workersNeeded) / buildingsNumber
     if (buildingsNumber > 0) {
         state
             .myUnhealthyBuildings

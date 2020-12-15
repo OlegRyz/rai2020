@@ -66,7 +66,6 @@ val Balanced = StrategicDsl {
         (it.myPopulationLimit - it.myPopulation < 3).isAlwaysNeeded()
         (it.myPopulation == 0 || it.myPopulationLimit > 2 * it.myPopulation).isNotAcceptable()
         (it.me.resource < it.properties(EntityType.HOUSE).initialCost + it.myFreeBuilders.count()).isNotAcceptable()
-        (it.ordersCache.getId(BUILD_HOUSE).count() > 1).isNotAcceptable()
         if (it.myBuildings.any{!it.active}) {
             it.canceldOrder(BUILD_HOUSE)
         }
