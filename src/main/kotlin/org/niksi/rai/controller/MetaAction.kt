@@ -34,12 +34,15 @@ val ATTACK_ENEMY = MetaAction("ATTACK_ENEMY") {
     }
 }
 
-val ATTACK_NEIGHBOR = MetaAction("ATTACK_NEIGHBOR") {
-    val target = Vec2Int(5, globalSettings.mapSize - 10)
-    val portion = it.myFreeInfantry.count() / 2
-    it.myFreeInfantry
+val ATTACK_NEIGHBOR = MetaAction("ATTACK_NEIGHBOR") { state->
+    val target = Vec2Int(5, globalSettings.mapSize - 5)
+    val portion = state.myFreeInfantry.count() / 2
+    state.myFreeInfantry
         .sortedBy { warrior -> distance(warrior.position, target) }
         .take(portion)
+        .apply {
+            state.recordOrder(this, this@MetaAction)
+        }
         .move(target)
 }
 
@@ -52,6 +55,10 @@ val ATTACK_NEIGHBOR_CLEANUP = MetaAction("ATTACK_NEIGHBOR_CLEANUP") { state ->
     state
         .myInfantry
         .inZone(globalSettings.mapSize - 50,globalSettings.mapSize,globalSettings.mapSize - 50, globalSettings.mapSize)
+        .forEach { state.canceldOrderIf(it, ATTACK_DIAGONAL) }
+    state
+        .myInfantry
+        .inZone(globalSettings.mapSize - 50,globalSettings.mapSize,0, 50)
         .forEach { state.canceldOrderIf(it, ATTACK_DIAGONAL) }
     mutableMapOf()
 }
@@ -72,6 +79,18 @@ val ATTACK_DIAGONAL = MetaAction("ATTACK_NEIGHBOR") {
     } else {
         mutableMapOf()
     }
+}
+
+val ATTACK_NEIGHBOR_RIGHT = MetaAction("ATTACK_NEIGHBOR_RIGHT") {state ->
+    val target = Vec2Int(globalSettings.mapSize - 5, 5)
+    val portion = state.myFreeInfantry.count() / 2
+    state.myFreeInfantry
+        .sortedBy { warrior -> distance(warrior.position, target) }
+        .take(portion)
+        .apply {
+            state.recordOrder(this, this@MetaAction)
+        }
+        .move(target)
 }
 
 val DEFENSIVE_WALL_RIGHT = MetaAction("FORMATION") { state ->

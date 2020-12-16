@@ -209,6 +209,8 @@ val FastBuilding = StrategicDsl {
         true.isBad()
         (2*(it.ordersCache.getId(ATTACK_NEIGHBOR).count() + it.ordersCache.getId(ATTACK_DIAGONAL).count())
                 < it.myInfantry.count()).isGood()
+        (it.myInfantry
+            .inZone(0,30,globalSettings.mapSize - 30, globalSettings.mapSize).count() > 0).isNotAcceptable()
         (it.myInfantry.count() < 9).isBad()
 
     }
@@ -226,6 +228,14 @@ val FastBuilding = StrategicDsl {
     DEFENSIVE_WALL_RIGHT.rule("DEFENSIVE_WALL_RIGHT") {
         true.isNotAcceptable()
         it.enemyInfantry.inZone(25, 60, 0, 35).any().isGood()
+    }
+
+    ATTACK_NEIGHBOR_RIGHT.rule("ATTACK_NEIGHBOR_RIGHT") {
+        true.isNotAcceptable()
+        (it.myInfantry
+            .inZone(0,15,globalSettings.mapSize - 15, globalSettings.mapSize).count() > 0 &&
+                it.enemyInfantry.inZone(0,25,globalSettings.mapSize - 25, globalSettings.mapSize).count() == 0)
+            .isGood()
     }
 }
 
