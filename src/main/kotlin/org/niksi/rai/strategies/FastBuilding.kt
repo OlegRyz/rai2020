@@ -184,6 +184,36 @@ val FastBuilding = StrategicDsl {
         true.isNotAcceptable()
         (it.myRangedBase == null && it.me.resource + it.myBuilders.count() * 3 > 500).isAlwaysNeeded()
     }
+
+    ATTACK_ENEMY.rule("") {
+        (it.myInfantry.count() > it.enemyInfantry.count() + 5).isGood()
+        (it.myInfantry.count() < it.enemyInfantry.count() + 5)
+            .alsoCancelOrder(ATTACK_ENEMY).isNotAcceptable()
+        (it.enemyInfantry.any { enemy -> it.my.any { distance(enemy.position, it.position) < 13 } }).isAlwaysNeeded()
+    }
+
+    ATTACK_NEIGHBOR.rule("") {
+        true.isBad()
+        (2*(it.ordersCache.getId(ATTACK_NEIGHBOR).count() + it.ordersCache.getId(ATTACK_DIAGONAL).count())
+                < it.myInfantry.count()).isGood()
+        (it.myInfantry.count() < 9).isBad()
+
+    }
+
+    ATTACK_DIAGONAL.rule("") {
+        true.isNotAcceptable()
+        (2*it.ordersCache.getId(ATTACK_DIAGONAL).count() < it.myInfantry.count()).isGood()
+    }
+
+    DEFEND_BUILDINGS.rule("") {
+        true.isNotAcceptable()
+        (it.enemies.near(it.myBuildings, 20).any()).isAlwaysNeeded()
+    }
+
+    DEFENSIVE_WALL_RIGHT.rule("DEFENSIVE_WALL_RIGHT") {
+        true.isNotAcceptable()
+        it.enemyInfantry.inZone(25, 60, 0, 35).any().isGood()
+    }
 }
 
 private fun RulesContext.applicableFor(condition: Boolean) {

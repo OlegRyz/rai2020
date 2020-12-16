@@ -51,6 +51,11 @@ class Controller(
         REPAIR_BUILDINGS_ALL,
         BUILD_BASE_RANGED,
         BUILD_UNIT_RANGED,
+        ATTACK_ENEMY,
+        ATTACK_DIAGONAL,
+        ATTACK_NEIGHBOR,
+        DEFEND_BUILDINGS,
+        DEFENSIVE_WALL_RIGHT,
     )
 
     fun Iterable<MetaAction>.takeBest(state: FieldState) = map { it to predictor.predict(it, state) }
@@ -67,7 +72,14 @@ class Controller(
         this.addAll(reccurent())
     }
 
-    private fun reccurent(): List<MetaAction> = listOf(F_FREE_WORKERS_COLLECT_RESOURCES, CLEANUP_GATE)
+    private fun reccurent(): List<MetaAction> = listOf(
+        F_FREE_WORKERS_COLLECT_RESOURCES,
+        CLEANUP_ORDERS,
+        CLEANUP_GATE,
+        ACTIVATE_TURRETS,
+        RUN_AWAY_BUILDERS,
+        ATTACK_NEIGHBOR_CLEANUP
+    )
 
     fun <T> T.log(currentTick: Int): T {
         println()
