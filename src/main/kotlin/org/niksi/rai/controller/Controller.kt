@@ -1,9 +1,7 @@
 package org.niksi.rai.controller
 
 import model.*
-import org.niksi.rai.strategies.Balanced
-import org.niksi.rai.strategies.F_EARLY_STAGE_COLLECT_RESOURCES
-import org.niksi.rai.strategies.FastBuilding
+import org.niksi.rai.strategies.*
 import kotlin.collections.*
 
 data class GlobalSettings(val mapSize: Int) {
@@ -18,6 +16,7 @@ class Controller(
         val maxPathfindNodes: Int,
         val maxTickCount: Int,
         val fogOfWar: Boolean) {
+    private val THRESHOLD = 0.05
     var bestAction = Action()
     val dsl = FastBuilding
     val predictor = Predictor(dsl)
@@ -47,13 +46,14 @@ class Controller(
     }
 
     private fun thoughtfulActions(): Iterable<MetaAction> = listOf(
-        F_EARLY_STAGE_COLLECT_RESOURCES
+        F_PRODUCE_BUILDER,
+        F_FREE_WORKERS_COLLECT_RESOURCES
     )
 
     fun Iterable<MetaAction>.takeBest(state: FieldState) = map { it to predictor.predict(it, state) }
         .sortedByDescending { it.second }
-        .mapIndexed { i, (item, _) ->
-            if (i < 2) {
+        .mapIndexed { i, (item, value) ->
+            if (i < 2 && value > THRESHOLD) {
                 item
             } else {
                 item.opposite
