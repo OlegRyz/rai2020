@@ -170,7 +170,7 @@ val RUN_AWAY_BUILDERS = MetaAction("RUN_AWAY_BUILDERS") {
         if  (closest != null) {
             surrender.retreatFrom(closest)
         } else {
-            EntityAction()
+            null
         }
     }
 }
@@ -381,17 +381,6 @@ private fun Array<BooleanArray>.fillB(fromIndex: Int, toIndex: Int, rowFiller: (
     }
 }
 
-
-val REPAIR_BUILDINGS = MetaAction("REPAIR_BUILDINGS") { state ->
-    state
-        .myBuilders
-        .choose(state, this, state.myUnhealthyBuildings.firstOrNull()?.position)
-        ?.also {
-            state.recordOrder(it, this@MetaAction)
-        }
-        ?.repair(state, state.myUnhealthyBuildings)
-}
-
 val REPAIR_BUILDINGS_ALL = MetaAction("REPAIR_BUILDINGS_ALL") { state ->
     val buildingsNumber =  state.myUnhealthyBuildings.count()
     val workersNeeded = state.myUnhealthyBuildings.sumBy { state.properties(it).size }
@@ -455,7 +444,7 @@ private fun List<Entity>.attackClosestToYou(fieldState: FieldState, targets: Lis
 private fun List<Entity>.attackClosestToClosestDefendable(fieldState: FieldState, targets: List<Entity>, defendable: List<Entity>) = act {
     val closest = targets.closest(defendable.closest(it.position)?.position)
     when (closest) {
-        null -> EntityAction(null, null, null, null)
+        null -> null
         else -> {
             val distance = fieldState.properties(it.entityType).attack?.attackRange ?: 0
             val position = (closest.position to it.position).transitToDistance(distance)
@@ -522,7 +511,7 @@ private fun List<Entity>.collect(fieldState: FieldState) = act {
         fieldState.resources.randomInRadius(150, it.position) ?:
         fieldState.resources.randomInRadius(300, it.position)
     when (val closest = target?.position) {
-        null -> EntityAction(null, null, null, null)
+        null -> null
         else -> EntityAction(
             MoveAction(closest.coerce(globalSettings.mapSize), true, true),
             null,

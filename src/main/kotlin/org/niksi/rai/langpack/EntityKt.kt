@@ -22,12 +22,7 @@ fun Entity.gatePosition(fieldState: FieldState): Vec2Int {
 
 fun Entity.repair(state: FieldState, entities: List<Entity>) = mutableMapOf(
     id to when (val closest = entities.closest(position)) {
-        null -> EntityAction(
-            null,
-            null,
-            null,
-            null
-        )
+        null -> null
         else -> {
             EntityAction(
                 MoveAction(closest.position.coerce(globalSettings.mapSize), true, true),
