@@ -3,6 +3,7 @@ package org.niksi.rai.strategies
 import model.*
 import org.niksi.rai.controller.*
 import org.niksi.rai.langpack.coerce
+import org.niksi.rai.langpack.stopProduction
 
 val F_FREE_WORKERS_COLLECT_RESOURCES = MetaAction("F_FREE_WORKERS_COLLECT_RESOURCES") { state ->
     state.ordersCache.getEntities(this, state.myBuilders)
@@ -16,18 +17,25 @@ val F_FREE_WORKERS_COLLECT_RESOURCES = MetaAction("F_FREE_WORKERS_COLLECT_RESOUR
         }.toAction()
 }
 
+val usedGates: MutableList<Vec2Int> = mutableListOf()
 val F_PRODUCE_BUILDER = MetaAction("F_PRODUCE_BUILDER") { state ->
+    if (usedGates.size > 19) {
+        usedGates.clear()
+    }
     if (state.myBuilderBase == null) {
         mutableMapOf()
     } else {
         state.myBuilderBase.run {
             val gate = getGates(state)
+                .filter { !(it in usedGates) }
                 .closest(state.resources
                     .map { it.position })
+            usedGates.add(gate)
             produce2(state, EntityType.BUILDER_UNIT, gate)
         }
-
     }
+}.doAlwaysWhenNotChosen {
+    it.myBuilderBase.stopProduction()
 }
 
 fun Entity.produce2(
