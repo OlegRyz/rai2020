@@ -165,8 +165,13 @@ val FastBuilding = StrategicDsl {
     }
 
     F_PRODUCE_BUILDER.rule("F_PRODUCE_BUILDER") { state ->
-        applicableFor(state.myBuilders.count() < 20 && state.me.resource >
+        applicableFor(state.myBuilders.count() < 40 && state.me.resource >
                 state.properties(EntityType.BUILDER_UNIT).initialCost + state.myBuilders.count())
+        (state.myBuilders.count() > 40 && state.me.resource >
+                state.properties(EntityType.BUILDER_UNIT).initialCost + state.myBuilders.count()).isGood()
+        (state.myBuilders.count() > 60 && state.me.resource >
+                state.properties(EntityType.BUILDER_UNIT).initialCost + state.myBuilders.count()).isBad()
+
     }
 
     (F_PRODUCE_BUILDER to BUILD_UNIT_RANGED).pairedRule("") {
