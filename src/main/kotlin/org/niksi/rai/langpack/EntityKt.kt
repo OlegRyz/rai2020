@@ -99,10 +99,10 @@ fun Vec2Int.closestBorder(currentPosition: Vec2Int, size: Int) = Vec2Int(x, y).a
 }
 
 
-fun Entity.attackClosestToYou(fieldState: FieldState, targets: List<Entity>): EntityAction {
+fun Entity.attackClosestToYou(fieldState: FieldState, targets: List<Entity>): EntityAction? {
     val closest = targets.closest(this.position)
     return when (closest) {
-        null -> EntityAction(null, null, null, null)
+        null -> null
         else -> {
             val distance = fieldState.properties(this.entityType).attack?.attackRange ?: 0
             var position = (closest.position to this.position).transitToDistance(distance)
