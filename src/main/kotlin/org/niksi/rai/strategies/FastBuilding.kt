@@ -109,7 +109,7 @@ fun Int.build2(
 
     return mutableMapOf(
         this to EntityAction(
-            MoveAction(buildPosition, false, true),
+            MoveAction(buildPosition.limitToMap(), false, true),
             BuildAction(type, position.limitToMap()),
             null,
             null

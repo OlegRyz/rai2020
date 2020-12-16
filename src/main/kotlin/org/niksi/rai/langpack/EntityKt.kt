@@ -69,7 +69,7 @@ fun Int.build(
     val size = fieldState.properties(type).size
     return mutableMapOf(
         this to EntityAction(
-            MoveAction(position.limitToMap().closestBorder(currentPosition,size), false, true),
+            MoveAction(position.limitToMap().closestBorder(currentPosition,size).limitToMap(), false, true),
             BuildAction(type, position.limitToMap()),
             null,
             null
