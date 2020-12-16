@@ -60,10 +60,10 @@ private fun List<Vec2Int>.closest(targets: List<Vec2Int>) =
 
 private fun Entity.getGates(state: FieldState): List<Vec2Int> = with(state.properties(this).size) {
     listOf(
-        List(this) { Vec2Int(-1, it) },
-        List(this) { Vec2Int(it, this) },
-        List(this) { Vec2Int(this, it) },
-        List(this) { Vec2Int(it, -1) },
+        List(this) {Vec2Int(-1, it)},
+        List(this) {Vec2Int(it, this)},
+        List(this) {Vec2Int(this, it)},
+        List(this) {Vec2Int(it, -1)},
     )
         .flatten()
         .map { Vec2Int(it.x + position.x, it.y + position.y) }
@@ -73,26 +73,24 @@ private fun noResourcesHere(state: FieldState, builder: Entity) =
     state.resources.none { isConnectedPoints(it.position, builder.position) }
 
 fun isConnectedPoints(position: Vec2Int, position1: Vec2Int): Boolean {
-    return manhDistance(position, position1) == 1
+    return manhDistance(position,position1) == 1
 }
 
 fun List<Pair<Int, EntityAction?>?>.toAction() =
     filterNotNull()
-        .filter { it.second != null }
-        .map { it.first to it.second!! }
-        .toMap()
-        .toMutableMap()
+    .filter {it.second != null}
+    .map{it.first to  it.second!!}
+    .toMap()
+    .toMutableMap()
 
 val FastBuilding = StrategicDsl {
-    F_FREE_WORKERS_COLLECT_RESOURCES.rule("F_FREE_WORKERS_COLLECT_RESOURCES") { state ->
+    F_FREE_WORKERS_COLLECT_RESOURCES.rule("F_FREE_WORKERS_COLLECT_RESOURCES")  { state ->
         applicableFor(state.myBuilders.count() < 20)
     }
 
     F_PRODUCE_BUILDER.rule("F_PRODUCE_BUILDER") { state ->
-        applicableFor(
-            state.myBuilders.count() < 20 && state.me.resource >
-                    state.properties(EntityType.BUILDER_UNIT).initialCost + state.myBuilders.count()
-        )
+        applicableFor(state.myBuilders.count() < 20 && state.me.resource >
+                state.properties(EntityType.BUILDER_UNIT).initialCost + state.myBuilders.count())
     }
 }
 
