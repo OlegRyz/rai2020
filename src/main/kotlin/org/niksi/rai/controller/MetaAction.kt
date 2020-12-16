@@ -306,9 +306,6 @@ fun MetaAction.build(it: FieldState, buildingType: EntityType): MutableMap<Int, 
                 it.recordOrder(builder, this)
             }
             ?.build(it, buildingType, spot)
-            .also { result ->
-                it.myFreeInfantry.gaters(it).move((it.myBuildings.middlePoint() to globalSettings.center).transit(0.2))
-            }
     } else {
         mutableMapOf()
     }
@@ -367,13 +364,6 @@ val REPAIR_BUILDINGS = MetaAction("REPAIR_BUILDINGS") { state ->
             state.recordOrder(it, this@MetaAction)
         }
         ?.repair(state, state.myUnhealthyBuildings)
-
-        .run {
-            state
-                .myFreeInfantry
-                .gaters(state)
-                .move((state.myBuildings.middlePoint() to globalSettings.center).transit(0.2))
-        }
 }
 
 val REPAIR_BUILDINGS_ALL = MetaAction("REPAIR_BUILDINGS_ALL") { state ->
@@ -398,12 +388,6 @@ val REPAIR_BUILDINGS_ALL = MetaAction("REPAIR_BUILDINGS_ALL") { state ->
 }
 
 
-private fun List<Entity>.gaters(fieldState: FieldState): List<Entity> {
-    val gates = listOf(fieldState.myRangedBase?.position?.x, fieldState.myMeleeBase?.position?.x) to
-    listOf(fieldState.myRangedBase?.position?.y, fieldState.myMeleeBase?.position?.y)
-    return filter { it.position.x in gates.first && it.position.y in gates.second}
-
-}
 private fun List<Entity>.repair(state: FieldState, building: Entity, acc: MutableMap<Int, EntityAction>): MutableMap<Int, EntityAction> {
     acc.putAll(map {
         it.id to
@@ -459,7 +443,7 @@ private fun List<Entity>.attackClosestToClosestDefendable(fieldState: FieldState
     }
 }
 
-private fun List<Entity>.move(point: Vec2Int,attackRange:Int = 10) = act {
+fun List<Entity>.move(point: Vec2Int, attackRange:Int = 10) = act {
     EntityAction(
         MoveAction(point.coerce(globalSettings.mapSize), true, true),
         null,

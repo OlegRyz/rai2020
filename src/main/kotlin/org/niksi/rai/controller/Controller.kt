@@ -75,7 +75,7 @@ class Controller(
     private fun reccurent(): List<MetaAction> = listOf(
         F_FREE_WORKERS_COLLECT_RESOURCES,
         CLEANUP_ORDERS,
-        CLEANUP_GATE,
+        F_CLEANUP_GATES,
         ACTIVATE_TURRETS,
         RUN_AWAY_BUILDERS,
         ATTACK_NEIGHBOR_CLEANUP

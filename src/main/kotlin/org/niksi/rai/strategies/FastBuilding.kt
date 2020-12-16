@@ -45,6 +45,19 @@ val F_BUILD_HOUSE = MetaAction("F_BUILD_HOUSE") {
     build2(it, EntityType.HOUSE)
 }
 
+val F_CLEANUP_GATES = MetaAction("F_CLEANUP_GATES") { state ->
+    if (state.myRangedBase != null ) {
+        val gaters = getGates(state, 5, state.myRangedBase.position).map { position ->
+            state.myInfantry
+                .firstOrNull{ it.position == position}
+        }
+            .filterNotNull()
+        gaters.move((state.myBuildings.middlePoint() to globalSettings.center).transit(0.2))
+    } else {
+        mutableMapOf()
+    }
+}
+
 private fun MetaAction.build2(state: FieldState, buildingType: EntityType): MutableMap<Int, EntityAction>? {
     val spotSize = state.properties(buildingType).size
     val spots = findEmptySpots(spotSize, state, buildingType)
