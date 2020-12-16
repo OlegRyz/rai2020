@@ -55,7 +55,6 @@ class Controller(
         ATTACK_DIAGONAL,
         ATTACK_NEIGHBOR,
         DEFEND_BUILDINGS,
-        DEFENSIVE_WALL_RIGHT,
     )
 
     fun Iterable<MetaAction>.takeBest(state: FieldState) = map { it to predictor.predict(it, state) }
