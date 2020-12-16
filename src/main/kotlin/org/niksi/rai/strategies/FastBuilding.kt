@@ -5,16 +5,27 @@ import org.niksi.rai.controller.*
 import org.niksi.rai.langpack.*
 
 val F_FREE_WORKERS_COLLECT_RESOURCES = MetaAction("F_FREE_WORKERS_COLLECT_RESOURCES") { state ->
-    state.ordersCache.getEntities(this, state.myBuilders)
+    if (state.myBuilders.count() < 10) {
+        collectEffective(state, this)
+    } else {
+        state.canceldOrder(this)
+        state.myFreeBuilders.run {
+            collect(state)
+        }
+    }
+}
+
+private fun collectEffective(state: FieldState, metaAction: MetaAction) =
+    state.ordersCache.getEntities(metaAction, state.myBuilders)
         .plus(state.myFreeBuilders)
         .filter { builder -> noResourcesHere(state, builder) }
         .map { builder ->
             state.resources.closest(builder.position)?.run {
-                state.recordOrder(builder, this@MetaAction)
+                state.recordOrder(builder, metaAction)
                 builder.id to builder.collectResources(this)
             }
-        }.toAction()
-}
+        }
+        .toAction()
 
 val usedGates: MutableList<Vec2Int> = mutableListOf()
 val F_PRODUCE_BUILDER = MetaAction("F_PRODUCE_BUILDER") { state ->
@@ -170,14 +181,14 @@ val FastBuilding = StrategicDsl {
         (state.myBuilders.count() > 40 && state.me.resource >
                 state.properties(EntityType.BUILDER_UNIT).initialCost + state.myBuilders.count()).isGood()
         (state.myBuilders.count() > 60 && state.me.resource >
-                state.properties(EntityType.BUILDER_UNIT).initialCost + state.myBuilders.count()).isBad()
+                state.properties(EntityType.BUILDER_UNIT).initialCost + state.myBuilders.count()).isNotAcceptable()
 
     }
 
     (F_PRODUCE_BUILDER to BUILD_UNIT_RANGED).pairedRule("") {
         true.isNotAcceptable()
         (it.myBuilders.count() > 8).isAlwaysNeeded()
-        val choice = (it.myInfantry.count() > 1.5 * it.myBuilders.count())
+        val choice = (it.myInfantry.count() > 2 * it.myBuilders.count())
         choice
     }
 

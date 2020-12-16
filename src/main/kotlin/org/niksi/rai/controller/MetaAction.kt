@@ -506,7 +506,7 @@ fun List<Entity>.act(action: (Entity) -> EntityAction?): MutableMap<Int, EntityA
         .toMutableMap()
 
 }
-private fun List<Entity>.collect(fieldState: FieldState) = act {
+fun List<Entity>.collect(fieldState: FieldState) = act {
     val target = fieldState.resources.randomInRadius(100, it.position) ?:
         fieldState.resources.randomInRadius(150, it.position) ?:
         fieldState.resources.randomInRadius(300, it.position)
