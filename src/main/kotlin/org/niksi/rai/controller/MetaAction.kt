@@ -158,7 +158,7 @@ val SNAKE_MOVE = MetaAction("SNAKE_MOVE") { state ->
 
 private fun Entity.moveOneStep(x: Int, y: Int): EntityAction =
     EntityAction(
-        MoveAction(position.shift(x, y), false, true),
+        MoveAction(position.shift(x, y).limitToMap(), false, true),
         null,
         null,
         null
@@ -418,7 +418,7 @@ private fun List<Entity>.repair(state: FieldState, building: Entity, acc: Mutabl
     acc.putAll(map {
         it.id to
                 EntityAction(
-                    MoveAction(building.position, true, true),
+                    MoveAction(building.position.limitToMap(), true, true),
                     null,
                     null,
                     RepairAction(building.id)
@@ -460,7 +460,7 @@ private fun List<Entity>.attackClosestToClosestDefendable(fieldState: FieldState
             val distance = fieldState.properties(it.entityType).attack?.attackRange ?: 0
             val position = (closest.position to it.position).transitToDistance(distance)
             EntityAction(
-                MoveAction(position.coerce(globalSettings.mapSize), true, true),
+                MoveAction(position.limitToMap(), true, true),
                 null,
                 AttackAction(closest.id, null),
                 null
@@ -471,7 +471,7 @@ private fun List<Entity>.attackClosestToClosestDefendable(fieldState: FieldState
 
 fun List<Entity>.move(point: Vec2Int, attackRange:Int = 10) = act {
     EntityAction(
-        MoveAction(point.coerce(globalSettings.mapSize), true, true),
+        MoveAction(point.limitToMap(), true, true),
         null,
         AttackAction(null, autoAttack(attackRange)),
         null)
