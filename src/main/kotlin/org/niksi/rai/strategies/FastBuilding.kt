@@ -185,7 +185,6 @@ val FastBuilding = StrategicDsl {
         true.isGood()
         (it.myPopulationLimit - it.myPopulation < 3).isAlwaysNeeded()
         (it.me.resource + it.myFreeBuilders.count() < it.properties(EntityType.HOUSE).initialCost).isNotAcceptable()
-        (it.myPopulation == 0 || it.myPopulationLimit > 2 * it.myPopulation).isNotAcceptable()
         (it.myRangedBase == null && it.myHouses.count() >= 3).isNotAcceptable()
         if (it.myBuildings.any{!it.active}) {
             it.canceldOrder(BUILD_HOUSE)
