@@ -290,7 +290,7 @@ val BUILD_HOUSE = MetaAction("BUILD_HOUSE") {
     build(it, EntityType.HOUSE)
 }
 
-private fun MetaAction.build(it: FieldState, buildingType: EntityType): MutableMap<Int, EntityAction>? {
+fun MetaAction.build(it: FieldState, buildingType: EntityType): MutableMap<Int, EntityAction>? {
     val spotSize = it.properties(buildingType).size
     val spot = findEmptySpot(spotSize, it, buildingType)
 
@@ -327,7 +327,7 @@ val HouseSpots = listOf(
 
 val RangedBaseSpots = List(3) { x -> List(3) { y -> Vec2Int(4 + x, 0 + y) }}.flatten()
 
-private fun findEmptySpot(spotSize: Int, state: FieldState, type: EntityType) = when(type) {
+fun findEmptySpot(spotSize: Int, state: FieldState, type: EntityType) = when(type) {
     EntityType.RANGED_BASE -> RangedBaseSpots.firstOrNull { available(it, state, spotSize)}
     else -> HouseSpots.firstOrNull { available(it, state, spotSize) }
 }

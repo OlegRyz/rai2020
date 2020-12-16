@@ -47,7 +47,8 @@ class Controller(
 
     private fun thoughtfulActions(): Iterable<MetaAction> = listOf(
         F_PRODUCE_BUILDER,
-        F_FREE_WORKERS_COLLECT_RESOURCES
+        F_FREE_WORKERS_COLLECT_RESOURCES,
+        F_BUILD_HOUSE,
     )
 
     fun Iterable<MetaAction>.takeBest(state: FieldState) = map { it to predictor.predict(it, state) }
