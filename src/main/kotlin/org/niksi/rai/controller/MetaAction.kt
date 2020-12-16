@@ -59,7 +59,7 @@ val ATTACK_NEIGHBOR_CLEANUP = MetaAction("ATTACK_NEIGHBOR_CLEANUP") { state ->
 fun List<Entity>.inZone(x1: Int, x2: Int, y1: Int, y2: Int) = filter {it.position.x in x1..x2 && it.position.y in y1..y2}
 
 val ATTACK_DIAGONAL = MetaAction("ATTACK_NEIGHBOR") {
-    val target = Vec2Int(globalSettings.mapSize - 25, globalSettings.mapSize - 25)
+    val target = Vec2Int(globalSettings.mapSize, globalSettings.mapSize)
     val portion = it.myFreeInfantry.count() / 2
 
     val lead = it.myFreeInfantry.closest(target)
@@ -174,9 +174,15 @@ val RETREAT_RANGED_UNITS = MetaAction("RETREAT_RANGED_UNITS") {
                 it.canceldOrder(surrender)
                 surrender.id to surrender.retreatFrom(closeEnemy.middlePoint())
             } else {
-                surrender.id to surrender.attackClosestToYou(it, it.enemies)
+                val action = surrender.attackClosestToYou(it, it.enemies)
+                if (action != null) {
+                    surrender.id to action
+                } else {
+                    null
+                }
             }
         }
+        .filterNotNull()
         .toMap()
         .toMutableMap()
 }
@@ -193,6 +199,7 @@ val CLEANUP_ORDERS = MetaAction("CLEANUP_ORDERS") {
 }
 
 val CLEANUP_GATE = MetaAction("CLEANUP_GATE") { state ->
+//    state.myInfantry.gaters(state).move((state.myBuildings.middlePoint() to globalSettings.center).transit(0.2))
     val actions = listOf(moveFrom(state.myRangedBase?.gatePosition(state), state),
         moveFrom(state.myMeleeBase?.gatePosition(state), state))
         .filterNotNull()
@@ -477,8 +484,20 @@ fun manhDistance(position: Vec2Int, target: Vec2Int) = manhDistance(position.x, 
 
 fun manhDistance(x: Int, y: Int, x1: Int, y1: Int) = abs(x - x1) + abs(y - y1)
 
-fun List<Entity>.act(action: (Entity) -> EntityAction) = associateBy({ it.id }, action).toMutableMap()
+fun List<Entity>.act(action: (Entity) -> EntityAction?): MutableMap<Int, EntityAction> {
+    return map {
+        val res = action(it)
+        if (res == null) {
+            null
+        } else {
+            it.id to res
+        }
+    }
+        .filterNotNull()
+        .toMap()
+        .toMutableMap()
 
+}
 private fun List<Entity>.collect(fieldState: FieldState) = act {
     val target = fieldState.resources.randomInRadius(100, it.position) ?:
         fieldState.resources.randomInRadius(150, it.position) ?:
