@@ -11,7 +11,7 @@ val F_FREE_WORKERS_COLLECT_RESOURCES = MetaAction("F_FREE_WORKERS_COLLECT_RESOUR
         .map { builder ->
             state.resources.closest(builder.position)?.run {
                 state.recordOrder(builder, this@MetaAction)
-                builder.id to builder.attack(this)
+                builder.id to builder.collectResources(this)
             }
         }.toAction()
 }
@@ -156,11 +156,19 @@ val FastBuilding = StrategicDsl {
                 state.properties(EntityType.BUILDER_UNIT).initialCost + state.myBuilders.count())
     }
 
+    (F_PRODUCE_BUILDER to BUILD_UNIT_RANGED).pairedRule("") {
+        true.isNotAcceptable()
+        (it.myBuilders.count() > 8).isAlwaysNeeded()
+        val choice = (it.myInfantry.count() > 1.5 * it.myBuilders.count())
+        choice
+    }
+
     F_BUILD_HOUSE.rule("Build a house if food is low") {
         true.isGood()
         (it.myPopulationLimit - it.myPopulation < 3).isAlwaysNeeded()
         (it.me.resource + it.myFreeBuilders.count() < it.properties(EntityType.HOUSE).initialCost).isNotAcceptable()
         (it.myPopulation == 0 || it.myPopulationLimit > 2 * it.myPopulation).isNotAcceptable()
+        (it.myRangedBase == null && it.myHouses.count() >= 3).isNotAcceptable()
         if (it.myBuildings.any{!it.active}) {
             it.canceldOrder(BUILD_HOUSE)
         }
@@ -185,9 +193,9 @@ private fun RulesContext.applicableFor(condition: Boolean) {
     }
 }
 
-private fun Entity.attack(target: Entity) = EntityAction(
+private fun Entity.collectResources(target: Entity) = EntityAction(
     MoveAction(target.position, true, false),
     null,
-    AttackAction(null, AutoAttack(0, arrayOf(EntityType.RESOURCE))),
+    AttackAction(null, AutoAttack(10, arrayOf(EntityType.RESOURCE))),
     null
 )

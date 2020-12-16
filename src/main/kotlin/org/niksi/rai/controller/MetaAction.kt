@@ -193,7 +193,7 @@ val CLEANUP_ORDERS = MetaAction("CLEANUP_ORDERS") {
 }
 
 val CLEANUP_GATE = MetaAction("CLEANUP_GATE") { state ->
-    val actions =  listOf(moveFrom(state.myRangedBase?.gatePosition(state), state),
+    val actions = listOf(moveFrom(state.myRangedBase?.gatePosition(state), state),
         moveFrom(state.myMeleeBase?.gatePosition(state), state))
         .filterNotNull()
     actions

@@ -48,6 +48,7 @@ class FieldState(
     val myRangedBase = myBuildings.firstOrNull { it.entityType == RANGED_BASE }
     val myTurrets = myBuildings.filterType(TURRET)
     val myUnhealthyBuildings = myBuildings.filter { it.health < entityProperties[it.entityType]!!.maxHealth }
+    val myHouses = myBuildings.filterType(HOUSE)
 
     val myPopulation = my.fold(0) { acc, entity -> acc + properties(entity).populationUse }
     val myPopulationLimit =

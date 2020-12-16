@@ -47,8 +47,10 @@ class Controller(
 
     private fun thoughtfulActions(): Iterable<MetaAction> = listOf(
         F_PRODUCE_BUILDER,
-        F_FREE_WORKERS_COLLECT_RESOURCES,
         F_BUILD_HOUSE,
+        REPAIR_BUILDINGS_ALL,
+        BUILD_BASE_RANGED,
+        BUILD_UNIT_RANGED,
     )
 
     fun Iterable<MetaAction>.takeBest(state: FieldState) = map { it to predictor.predict(it, state) }
@@ -65,7 +67,7 @@ class Controller(
         this.addAll(reccurent())
     }
 
-    private fun reccurent(): List<MetaAction> = emptyList()
+    private fun reccurent(): List<MetaAction> = listOf(F_FREE_WORKERS_COLLECT_RESOURCES, CLEANUP_GATE)
 
     fun <T> T.log(currentTick: Int): T {
         println()
