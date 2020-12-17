@@ -82,7 +82,6 @@ class Controller(
         CURED_INFANTRY_CLEANUP,
         BUILDERS_REPAIR_INFANTRY,
         RUN_AWAY_BUILDERS,
-        INFANTRY_GO_REPAIR,
     )
 
     fun <T> T.log(currentTick: Int): T {
