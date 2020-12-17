@@ -77,7 +77,8 @@ class Controller(
         F_CLEANUP_GATES,
         ACTIVATE_TURRETS,
         RUN_AWAY_BUILDERS,
-        ATTACK_NEIGHBOR_CLEANUP
+        ATTACK_NEIGHBOR_CLEANUP,
+        BUILDERS_ATTACK_ENEMY_BUILDERS
     )
 
     fun <T> T.log(currentTick: Int): T {

@@ -165,15 +165,26 @@ private fun Entity.moveOneStep(x: Int, y: Int): EntityAction =
     )
 
 val RUN_AWAY_BUILDERS = MetaAction("RUN_AWAY_BUILDERS") {
-    it.myBuilders.near(it.enemies, 8).act { surrender ->
-        val closest = it.enemyInfantry.closest(surrender.position)
-        if  (closest != null) {
-            surrender.retreatFrom(closest)
-        } else {
-            null
+    it.myBuilders.near(it.enemyInfantry, 8)
+        .plus(it.myBuilders.near(it.enemyTurrets, it.properties(EntityType.TURRET).attack?.attackRange?:8))
+        .act { surrender ->
+            val closest = it.enemyInfantry.closest(surrender.position)
+            if (closest != null) {
+                surrender.retreatFrom(closest)
+            } else {
+                null
+            }
         }
-    }
 }
+
+val BUILDERS_ATTACK_ENEMY_BUILDERS = MetaAction("ATTACK_ENEMY") { state ->
+    state.myBuilders.near(state.enemyBuilders, 4)
+        .run {
+            state.recordOrder(this, this@MetaAction)
+            attackClosestToYou(state, state.enemyBuilders)
+        }
+}
+
 
 fun Entity.retreatFrom(enemy: Entity) = retreatFrom(enemy.position)
 fun Entity.retreatFrom(enemyPosition: Vec2Int) = moveAsap(
