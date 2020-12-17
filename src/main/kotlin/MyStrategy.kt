@@ -3,7 +3,7 @@ import org.niksi.rai.controller.Controller
 import org.niksi.rai.controller.checkConsistency
 
 class MyStrategy {
-    val version = "1.1.8-manhattan".also {
+    val version = "1.1.9-manhattan".also {
         println("Version $it")
     }
     var controller: Controller? = null
