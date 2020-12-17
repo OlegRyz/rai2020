@@ -186,6 +186,14 @@ val BUILDERS_ATTACK_ENEMY_BUILDERS = MetaAction("ATTACK_ENEMY") { state ->
 }
 
 
+val BUILDERS_ATTACK_ENEMY_CLOSE = MetaAction("ATTACK_ENEMY") { state ->
+    state.myBuilders.near(state.enemies, 1) .run {
+        state.recordOrder(this, this@MetaAction)
+        attackClosestToYou(state, state.enemies)
+    }
+}
+
+
 fun Entity.retreatFrom(enemy: Entity) = retreatFrom(enemy.position)
 fun Entity.retreatFrom(enemyPosition: Vec2Int) = moveAsap(
     Vec2Int(
