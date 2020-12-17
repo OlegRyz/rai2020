@@ -193,6 +193,69 @@ val BUILDERS_ATTACK_ENEMY_CLOSE = MetaAction("ATTACK_ENEMY") { state ->
     }
 }
 
+val CURED_INFANTRY_CLEANUP = MetaAction("CURED_INFANTRY_CLEANUP") { state ->
+    state.myUnits.forEach {
+        if (state.ordersCache[it.id]?.metaAction?.isSame(BUILDERS_REPAIR_INFANTRY) == true) {
+            if (it.health == state.properties(it).maxHealth
+                || listOf(it).near(state.myBuilders,3).count() == 0) {
+                state.canceldOrder(it)
+            }
+        }
+    }
+    mutableMapOf()
+}
+
+val BUILDERS_REPAIR_INFANTRY = MetaAction("BUILDERS_REPAIR_INFANTRY") { state ->
+    state.myBuilders
+        .near(state.myUnhealthyUnits, 3)
+        .let { builders ->
+            val patients = state.myUnhealthyUnits.filter { unhealthy ->
+                builders.any { builder ->
+                    manhDistance(builder.position, unhealthy.position) < 4 &&
+                            builder.id != unhealthy.id
+                }
+            }
+            patients.fold(mutableMapOf()) {acc, unhealthy ->
+                acc.put(unhealthy.id, EntityAction(null,null,null,null))
+                state.recordOrder(unhealthy, this)
+                builders
+                    .sortedBy { distance(it.position, unhealthy.position) < 4 }
+                    .take(2)
+                    .repair(state, unhealthy, acc)
+            }
+    }
+}
+
+val INFANTRY_GO_REPAIR = MetaAction("INFANTRY_GO_REPAIR") {state ->
+    state.myUnhealthyUnits.notNear(state.enemies, 15).moveToClosest(state, state.myBuilders)
+}
+
+private fun List<Entity>.moveToClosest(fieldState: FieldState, targets: List<Entity>): MutableMap<Int, EntityAction>  = act {
+    it.moveToClosest( fieldState, targets)
+}
+
+private fun Entity.moveToClosest(
+    fieldState: FieldState,
+    targets: List<Entity>,
+): EntityAction? {
+    val closest = targets.closest(this.position)
+    return when (closest) {
+        null -> null
+        else -> {
+            val distance = fieldState.properties(this.entityType).attack?.attackRange ?: 0
+            var position = (closest.position to this.position).transitToDistance(distance)
+            if (fieldState.myInfantry.any { it.position.isSame(position) }) {
+                position = position.randomShift(1, 1)
+            }
+            EntityAction(
+                MoveAction(position.coerce(globalSettings.mapSize), true, false),
+                null,
+                null,
+                null
+            )
+        }
+    }
+}
 
 fun Entity.retreatFrom(enemy: Entity) = retreatFrom(enemy.position)
 fun Entity.retreatFrom(enemyPosition: Vec2Int) = moveAsap(
@@ -278,7 +341,14 @@ val DEFEND_BUILDINGS = MetaAction("DEFEND_BUILDINGS") { state->
 fun List<Entity>.near(targets: List<Entity>, range: Int) =
     filter { origin ->
         targets.any {
-                target -> distance(target.position, origin.position)< range
+                target -> distance(target.position, origin.position) < range
+        }
+    }
+
+fun List<Entity>.notNear(targets: List<Entity>, range: Int) =
+    filter { origin ->
+        targets.any {
+                target -> distance(target.position, origin.position) > range
         }
     }
 
