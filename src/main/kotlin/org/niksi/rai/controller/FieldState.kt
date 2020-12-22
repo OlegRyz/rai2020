@@ -41,13 +41,17 @@ class FieldState(
     val myInfantry = listOf(myMelee, myRanged).flatten()
     val myFreeInfantry = myInfantry.free()
     val myFreeMelee = myMelee.free()
+    val myUnits = listOf(myBuilders, myRanged, myMelee).flatten()
+    val myUnhealthyUnits = myUnits.filterUnhealthy()
 
     val myBuildings = my.filter { it.isBuilding }
     val myBuilderBase = myBuildings.firstOrNull { it.entityType == BUILDER_BASE }
     val myMeleeBase = myBuildings.firstOrNull { it.entityType == MELEE_BASE }
     val myRangedBase = myBuildings.firstOrNull { it.entityType == RANGED_BASE }
     val myTurrets = myBuildings.filterType(TURRET)
-    val myUnhealthyBuildings = myBuildings.filter { it.health < entityProperties[it.entityType]!!.maxHealth }
+    val myUnhealthyBuildings = myBuildings.filterUnhealthy()
+
+    val myHouses = myBuildings.filterType(HOUSE)
 
     val myPopulation = my.fold(0) { acc, entity -> acc + properties(entity).populationUse }
     val myPopulationLimit =
@@ -58,7 +62,11 @@ class FieldState(
     val enemyMelee = enemies.filterType(MELEE_UNIT)
     val enemyRanged = enemies.filterType(RANGED_UNIT)
     val enemyInfantry = listOf(enemyMelee, enemyRanged).flatten()
+    val enemyTurrets = enemies.filterType(TURRET)
     val enemyUnits = listOf(enemyMelee, enemyRanged, enemyBuilders).flatten()
+
+    fun  List<Entity>.filterUnhealthy(): List<Entity> =
+        filter { it.health < entityProperties[it.entityType]!!.maxHealth }
     fun List<Entity>.free(): List<Entity> = filterNot { ordersCache.keys.contains(it.id) }
     fun myEntityBy(id: Int?) = if (id == null) null else my.firstOrNull { it.id == id }
     fun myEntityBy(ids: List<Int>) = my.filter { it.id in ids }

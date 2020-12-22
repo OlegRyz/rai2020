@@ -22,12 +22,7 @@ fun Entity.gatePosition(fieldState: FieldState): Vec2Int {
 
 fun Entity.repair(state: FieldState, entities: List<Entity>) = mutableMapOf(
     id to when (val closest = entities.closest(position)) {
-        null -> EntityAction(
-            null,
-            null,
-            null,
-            null
-        )
+        null -> null
         else -> {
             EntityAction(
                 MoveAction(closest.position.coerce(globalSettings.mapSize), true, true),
@@ -69,7 +64,7 @@ fun Int.build(
     val size = fieldState.properties(type).size
     return mutableMapOf(
         this to EntityAction(
-            MoveAction(position.limitToMap().closestBorder(currentPosition,size), false, true),
+            MoveAction(position.limitToMap().closestBorder(currentPosition,size).limitToMap(), false, true),
             BuildAction(type, position.limitToMap()),
             null,
             null
@@ -99,10 +94,10 @@ fun Vec2Int.closestBorder(currentPosition: Vec2Int, size: Int) = Vec2Int(x, y).a
 }
 
 
-fun Entity.attackClosestToYou(fieldState: FieldState, targets: List<Entity>): EntityAction {
+fun Entity.attackClosestToYou(fieldState: FieldState, targets: List<Entity>): EntityAction? {
     val closest = targets.closest(this.position)
     return when (closest) {
-        null -> EntityAction(null, null, null, null)
+        null -> null
         else -> {
             val distance = fieldState.properties(this.entityType).attack?.attackRange ?: 0
             var position = (closest.position to this.position).transitToDistance(distance)

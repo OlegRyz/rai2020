@@ -1,7 +1,7 @@
 package org.niksi.rai.controller
 
 import model.*
-import org.niksi.rai.strategies.Balanced
+import org.niksi.rai.strategies.*
 import kotlin.collections.*
 
 data class GlobalSettings(val mapSize: Int) {
@@ -16,8 +16,9 @@ class Controller(
         val maxPathfindNodes: Int,
         val maxTickCount: Int,
         val fogOfWar: Boolean) {
+    private val THRESHOLD = 0.05
     var bestAction = Action()
-    val dsl = Balanced
+    val dsl = FastBuilding
     val predictor = Predictor(dsl)
     val ordersCache = OrdersCache()
 
@@ -45,25 +46,21 @@ class Controller(
     }
 
     private fun thoughtfulActions(): Iterable<MetaAction> = listOf(
-        DO_NOTHING,
-        COLLECT_RESOURCES,
+        F_PRODUCE_BUILDER,
+        F_BUILD_HOUSE,
+        REPAIR_BUILDINGS_ALL,
+        BUILD_BASE_RANGED,
+        BUILD_UNIT_RANGED,
         ATTACK_ENEMY,
         ATTACK_DIAGONAL,
         ATTACK_NEIGHBOR,
         DEFEND_BUILDINGS,
-        DEFENSIVE_WALL_RIGHT,
-        BUILD_UNIT_BUILDER,
-        BUILD_UNIT_RANGED,
-        BUILD_UNIT_MELEE,
-        BUILD_HOUSE,
-        BUILD_BASE_RANGED,
-        REPAIR_BUILDINGS_ALL,
     )
 
     fun Iterable<MetaAction>.takeBest(state: FieldState) = map { it to predictor.predict(it, state) }
         .sortedByDescending { it.second }
-        .mapIndexed { i, (item, _) ->
-            if (i < 2) {
+        .mapIndexed { i, (item, value) ->
+            if (i < 2 && value > THRESHOLD) {
                 item
             } else {
                 item.opposite
@@ -74,7 +71,18 @@ class Controller(
         this.addAll(reccurent())
     }
 
-    private fun reccurent() = listOf(CLEANUP_ORDERS, CLEANUP_GATE, ACTIVATE_TURRETS, RUN_AWAY_BUILDERS, ATTACK_NEIGHBOR_CLEANUP)
+    private fun reccurent(): List<MetaAction> = listOf(
+        F_FREE_WORKERS_COLLECT_RESOURCES,
+        CLEANUP_ORDERS,
+        F_CLEANUP_GATES,
+        ACTIVATE_TURRETS,
+        ATTACK_NEIGHBOR_CLEANUP,
+        BUILDERS_ATTACK_ENEMY_BUILDERS,
+        BUILDERS_ATTACK_ENEMY_CLOSE,
+        CURED_INFANTRY_CLEANUP,
+        BUILDERS_REPAIR_INFANTRY,
+        RUN_AWAY_BUILDERS,
+    )
 
     fun <T> T.log(currentTick: Int): T {
         println()
